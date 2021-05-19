@@ -1,0 +1,7 @@
+data/
+example/amplicons/
+example/indices/
+external/
+simulations_*/
+__pycache__/
+*.ipynb_checkpoints
