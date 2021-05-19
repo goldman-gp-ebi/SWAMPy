@@ -106,32 +106,35 @@ python simulate_metagenome.py \
     - All of the above data is adjoined to the amplicon dataframe from step 2. 
 
 4. For each row in the amplicon dataframe, run art_illumina with the required numbers of reads and with the following parameters:
-            art_illumina \
-                --amplicon \
-                --quiet \
-                --paired \
-                --rndSeed random_number \
-                --noALN \
-                --maskN 0  \
-                --seqSys", MSv3 \
-                --in amplicon_file.fasta \
-                --len 250 \
-                --rcount n_reads \
-                --out out_prefix 
+
+```
+    art_illumina \
+        --amplicon \
+        --quiet \
+        --paired \
+        --rndSeed random_number \
+        --noALN \
+        --maskN 0  \
+        --seqSys", MSv3 \
+        --in amplicon_file.fasta \
+        --len 250 \
+        --rcount n_reads \
+        --out out_prefix 
+```
     
     All of these output files are then stitched together in alphabetical order for each set of reads 1 and 2. 
 
 ## TODOs
 
-Ensure repeatability with same random seeds
-Add a proper LICENSE - it's MIT for now. 
-Check with Nick about what is/ isn't allowed in a git repository (twist fasta files?/ filepaths?) and then upload to an embl github. 
-Deal with alts - produce all combinations of alts and at a relatively lower proportion (1/2^n)
-Share my jupyter notebooks that have some notes about Dirichlet distribution
-Randomise the order of reads within the fastqs
-Tune bowtie2 so that amplicon dropout occurs in line with experiment
-Tune bowtie2 to allow ACGT->N substitutions in primer sites
-Simulate other PCR products (how? Chimeras -> Simera + Point mutations -> with a script? /ignore Chimeras for now.)
+- Ensure repeatability with same random seeds
+- Add a proper LICENSE - it's MIT for now. 
+- Check with Nick about what is/ isn't allowed in a git repository (twist fasta files?/ filepaths?) and then upload to an embl github. 
+- Deal with alts - produce all combinations of alts and at a relatively lower proportion (1/2^n)
+- Share my jupyter notebooks that have some notes about Dirichlet distribution
+- Randomise the order of reads within the fastqs
+- Tune bowtie2 so that amplicon dropout occurs in line with experiment
+- Tune bowtie2 to allow ACGT->N substitutions in primer sites
+- Simulate other PCR products (how? Chimeras -> Simera + Point mutations -> with a script? /ignore Chimeras for now.)
 
 ## Aknowledgements
 
