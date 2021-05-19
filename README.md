@@ -107,21 +107,22 @@ python simulate_metagenome.py \
 
 4. For each row in the amplicon dataframe, run art_illumina with the required numbers of reads and with the following parameters:
 
-```
-    art_illumina \
-        --amplicon \
-        --quiet \
-        --paired \
-        --rndSeed random_number \
-        --noALN \
-        --maskN 0  \
-        --seqSys", MSv3 \
-        --in amplicon_file.fasta \
-        --len 250 \
-        --rcount n_reads \
-        --out out_prefix 
-```
-    
+    ```
+        art_illumina \
+            --amplicon \
+            --quiet \
+            --paired \
+            --rndSeed random_number \
+            --noALN \
+            --maskN 0  \
+            --seqSys", MSv3 \
+            --in amplicon_file.fasta \
+            --len 250 \
+            --rcount n_reads \
+            --out out_prefix 
+
+    ```
+
     All of these output files are then stitched together in alphabetical order for each set of reads 1 and 2. 
 
 ## TODOs
@@ -133,7 +134,7 @@ python simulate_metagenome.py \
 - Share my jupyter notebooks that have some notes about Dirichlet distribution
 - Randomise the order of reads within the fastqs
 - Tune bowtie2 so that amplicon dropout occurs in line with experiment
-- Tune bowtie2 to allow ACGT->N substitutions in primer sites
+- Tune bowtie2 to allow ACGT -> N substitutions in primer sites
 - Simulate other PCR products (how? Chimeras -> Simera + Point mutations -> with a script? /ignore Chimeras for now.)
 
 ## Aknowledgements

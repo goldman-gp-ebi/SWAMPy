@@ -1,10 +1,11 @@
 from numpy.random import dirichlet, binomial
 import numpy as np
 import pandas as pd
-np.random.seed = 10
 
-def get_amplicon_reads_sampler(amplicon_distribution, amplicon_distribution_file, amplicon_pseudocounts_c, total_n_reads):
 
+def get_amplicon_reads_sampler(amplicon_distribution, amplicon_distribution_file, amplicon_pseudocounts_c, total_n_reads, seed):
+    
+    np.random.seed = seed 
     if amplicon_distribution.upper() == "EXACT":
 
         amplicon_distribution_dict = {}

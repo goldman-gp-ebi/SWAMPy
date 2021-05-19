@@ -159,7 +159,8 @@ if __name__ == "__main__":
                                 AMPLICON_DISTRIBUTION, 
                                 AMPLICON_DISTRIBUTION_FILE, 
                                 AMPLICON_PSEUDOCOUNTS, 
-                                N_READS)
+                                N_READS, 
+                                SEED)
 
     df_amplicons["total_n_reads"] = N_READS
     
