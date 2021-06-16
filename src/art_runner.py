@@ -1,17 +1,20 @@
-import subprocess
 import shutil
+import subprocess
 import glob
 import os
 from os.path import basename, join
+from io import StringIO
 import numpy as np
 from contextlib import contextmanager
+import string
+
+
 
 class ArtIllumina:
 
-    def __init__(self, rnd_seed, outpath, output_filename_prefix):
+    def __init__(self, outpath, output_filename_prefix):
         self.outpath = outpath
         self.output_filename_prefix = output_filename_prefix
-        np.random.seed = rnd_seed
 
     def run_once(self, infile, n_reads, out_prefix, rnd_seed):
 
@@ -44,21 +47,36 @@ class ArtIllumina:
         all_r1_files = sorted([x for x in glob.glob("./tmp.sms.*") if x[-4:] == "1.fq"])
         all_r2_files = sorted([x for x in glob.glob("./tmp.sms.*") if x[-4:] == "2.fq"])
 
-        with open(f"./{self.output_filename_prefix}1.fastq", "w") as all_r1:
+        with open("./tmp.sms.all_files_unshuffled1.fastq", "w") as all_r1:
             for r1 in all_r1_files:
                 with open(r1, "r") as r1fh:
                     shutil.copyfileobj(r1fh, all_r1)
         
-        with open(f"./{self.output_filename_prefix}2.fastq", "w") as all_r2:
+        with open("./tmp.sms.all_files_unshuffled2.fastq", "w") as all_r2:
             for r2 in all_r2_files:
                 with open(r2, "r") as r2fh:
                     shutil.copyfileobj(r2fh, all_r2)
 
+        print("Creating random data for shuffle.")
+        with open("./tmp.sms.random_data", "w") as random_data:
+            ALPHABET = np.array(list(string.ascii_lowercase))
+            random_data.write("".join(np.random.choice(ALPHABET, size=5000000)))
+
+        # shuffle the fastq's so that the reads are in a random order. 
+        shuffle_fastq_file("./tmp.sms.all_files_unshuffled1.fastq", f"./{self.output_filename_prefix}1.fastq", "./tmp.sms.random_data")
+        shuffle_fastq_file("./tmp.sms.all_files_unshuffled2.fastq", f"./{self.output_filename_prefix}2.fastq", "./tmp.sms.random_data")
+
+
+def shuffle_fastq_file(input_filename, output_filename, random_seed):
+    print(f"Shuffling {output_filename}")
+    # additionally, this changes all '&' characters back to '/' characters. 
+    os.system(f"paste -s -d '\t\t\t\n' {input_filename} | shuf --random-source={random_seed} | tr '\t&' '\n/' > {output_filename}")
+
 @contextmanager
-def art_illumina(rnd_seed, outpath, output_filename_prefix):
+def art_illumina(outpath, output_filename_prefix):
     
     try:
-        yield ArtIllumina(rnd_seed, outpath, output_filename_prefix)
+        yield ArtIllumina(outpath, output_filename_prefix)
     
     finally:
         print("Exiting sars-cov-2 metagenome simulator - tidying up.")

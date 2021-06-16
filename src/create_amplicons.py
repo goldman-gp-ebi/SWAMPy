@@ -1,6 +1,7 @@
 import subprocess
 from os.path import join, basename
 from io import StringIO
+from Bio import SeqIO
 import pandas as pd
 
 
@@ -94,3 +95,23 @@ def write_amplicon(df, reference, genome_filename_short, amplicons_folder, verbo
 
                 f.write(f">{reference.id}_amplicon_{amplicon_number}" + ("_alt" if alt else "") + "\n")
                 f.write(amplicon + "\n\n")
+
+
+if __name__=="__main__":
+
+    import argparse
+    parser = argparse.ArgumentParser(description="Create amplicons for a genome using a primer set.")
+    parser.add_argument("--genome_path", "-g", help="Path to the genome of interest.")
+    parser.add_argument("--amplicons_folder", "-am", help="Folder where the output amplicons will go.")
+    parser.add_argument("--indices_folder", "-i", help="Folder where bowtie2 indices are created and stored.")
+    parser.add_argument("--primers_file", "-p", help="Path to fastq file of primers. Default ARTIC V3 primers.")
+    parser.add_argument("--verbose", help="Verbose mode.")
+
+    # genome_path, genome_filename_short, indices_folder, primers_files, verbose
+    args = parser.parse_args()
+    genome_filename_short = ".".join(basename(args.genome_path).split(".")[:-1])
+    reference = SeqIO.read(args.genome_path, format="fasta")
+
+    build_index(args.genome_path, genome_filename_short, args.indices_folder)
+    df = align_primers(args.genome_path, genome_filename_short, args.indices_folder, args.primers_file, args.verbose)
+    write_amplicon(df, reference, genome_filename_short, args.amplicons_folder, verbose=args.verbose)

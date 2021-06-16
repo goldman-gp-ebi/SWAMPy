@@ -6,15 +6,14 @@ import logging
 from Bio import SeqIO
 import subprocess
 import pandas as pd
-import shutil
-from io import StringIO
-from types import SimpleNamespace
 import numpy as np
-#0, 1, 5, 10, 20, 50, 80, 90, 95, 99, 100
+
 from art_runner import art_illumina
 from create_amplicons import build_index, align_primers, write_amplicon
 from read_model import get_amplicon_reads_sampler
 
+
+# All these caps variables are set once (by user inputs, with default values) but then never touched again.
 BASE_DIR = join(dirname(dirname(abspath(__file__))), "example")
 GENOMES_FOLDER = join(BASE_DIR, "genomes")
 AMPLICONS_FOLDER = join(BASE_DIR, "amplicons")
@@ -22,15 +21,13 @@ INDICES_FOLDER = join(BASE_DIR, "indices")
 ABUNDANCES_FILE = join(BASE_DIR, "abundances.csv")
 PRIMERS_FILE = join(BASE_DIR, "artic_sars-cov-2_primers_no_alts.fastq")
 OUTPUT_FOLDER = os.getcwd()
-OUTPUT_FILENAME_PREFIX = "S100_c10000_rep1_R"
+OUTPUT_FILENAME_PREFIX = "S100_c10000_rep2_R"
 N_READS = 100000
 SEED = 21
 VERBOSE = True
 AMPLICON_DISTRIBUTION = "DIRICHLET_1"
 AMPLICON_DISTRIBUTION_FILE = join(BASE_DIR, "amplicon_distribution.csv")
 AMPLICON_PSEUDOCOUNTS = 10000
-
-np.random.seed = SEED
 
 
 log = logging.getLogger()
@@ -58,9 +55,6 @@ def load_command_line_args():
     args = parser.parse_args()
     args = parser.parse_args()
 
-    global BASE_DIR
-    BASE_DIR = args.workspace_folder
-
     global GENOMES_FOLDER
     GENOMES_FOLDER = args.genomes_folder
 
@@ -83,10 +77,11 @@ def load_command_line_args():
     OUTPUT_FILENAME_PREFIX = args.output_filename_prefix
 
     global N_READS
-    N_READS = args.nreads
+    N_READS = int(args.nreads)
 
     global SEED
     SEED = args.seed
+    np.random.seed(int(SEED))
 
     global VERBOSE
     VERBOSE = args.verbose
@@ -98,7 +93,7 @@ def load_command_line_args():
     AMPLICON_DISTRIBUTION_FILE = args.amplicon_distribution_file
     
     global AMPLICON_PSEUDOCOUNTS
-    AMPLICON_PSEUDOCOUNTS = args.amplicon_pseudocounts
+    AMPLICON_PSEUDOCOUNTS = int(args.amplicon_pseudocounts)
     
 
 
@@ -133,8 +128,9 @@ if __name__ == "__main__":
 
     # STEP 2: Simulate Amplicon Population
 
-    for genome_path in glob.iglob(join(GENOMES_FOLDER, "*")):
-
+    for genome_path in genome_abundances:
+        genome_path += ".fasta"
+        genome_path = join(GENOMES_FOLDER, genome_path)
         genome_filename_short = ".".join(basename(genome_path).split(".")[:-1])
         reference = SeqIO.read(genome_path, format="fasta")
 
@@ -155,21 +151,27 @@ if __name__ == "__main__":
 
 
     # pick total numbers of reads for each amplicon
-    amplicon_hyperparameter_sampler, amplicon_probability_sampler, amplicon_reads_sampler = get_amplicon_reads_sampler(
+    genome_count_sampler, amplicon_hyperparameter_sampler, amplicon_probability_sampler, amplicon_reads_sampler = get_amplicon_reads_sampler(
                                 AMPLICON_DISTRIBUTION, 
                                 AMPLICON_DISTRIBUTION_FILE, 
                                 AMPLICON_PSEUDOCOUNTS, 
-                                N_READS, 
-                                SEED)
+                                genome_abundances,
+                                N_READS)
 
     df_amplicons["total_n_reads"] = N_READS
     
+    # for each amplicon, look up what the dirichlet hyperparameter should be (parameter \alpha)
     df_amplicons["hyperparameter"] = df_amplicons.apply(amplicon_hyperparameter_sampler, axis=1)
+
+    # for each genome, sample a total number of reads that should be shared between all of its amplicons
+    # N_genome = Multinomial(N_reads, p_genomes)
+    df_amplicons["genome_n_reads"] = df_amplicons.apply(genome_count_sampler, axis=1)
+
+    # sample a p_amplicon vector from the dirichlet distribution - p_amplicon = Dir(\alpha)
     df_amplicons["amplicon_prob"] = df_amplicons.apply(amplicon_probability_sampler, axis=1)
+
+    # sample a number of reads for the amplicons of each genome: Multinomial(N_genome, p_amplicon)
     df_amplicons["n_reads"] = df_amplicons.apply(amplicon_reads_sampler, axis=1)
-    
-    if VERBOSE:
-        print(df_amplicons.head())
 
     # write a summary csv
     df_amplicons[
@@ -179,6 +181,7 @@ if __name__ == "__main__":
         "amplicon_filepath",
         "total_n_reads", 
         "abundance",
+        "genome_n_reads",
         "hyperparameter",
         "amplicon_prob",
         "n_reads"]].to_csv(join(OUTPUT_FOLDER, f"{OUTPUT_FILENAME_PREFIX}_amplicon_abundances_summary.csv"))
@@ -190,5 +193,5 @@ if __name__ == "__main__":
     amplicons = [join(AMPLICONS_FOLDER, a) for a in df_amplicons["amplicon_filepath"]]
     n_reads = list(df_amplicons["n_reads"])
 
-    with art_illumina(SEED, OUTPUT_FOLDER, OUTPUT_FILENAME_PREFIX) as art:
+    with art_illumina(OUTPUT_FOLDER, OUTPUT_FILENAME_PREFIX) as art:
         art.run(amplicons, n_reads)

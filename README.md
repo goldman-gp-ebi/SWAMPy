@@ -127,15 +127,38 @@ python simulate_metagenome.py \
 
 ## TODOs
 
-- Ensure repeatability with same random seeds
-- Add a proper LICENSE - it's MIT for now. 
-- Check with Nick about what is/ isn't allowed in a git repository (twist fasta files?/ filepaths?) and then upload to an embl github. 
+- We should be able to pass the software one very big fasta file full of lots of genomes, and make a mixture using possibly a subset - at the moment you need to input one genome per fasta file and put them all in a folder, so this needs to be changed
+
+- DONE Ensure repeatability with same random seeds, including in Nick's shuffling method (therefore might need to change it a little bit)
+
 - Deal with alts - produce all combinations of alts and at a relatively lower proportion (1/2^n)
-- Share my jupyter notebooks that have some notes about Dirichlet distribution
-- Randomise the order of reads within the fastqs
+
 - Tune bowtie2 so that amplicon dropout occurs in line with experiment
-- Tune bowtie2 to allow ACGT -> N substitutions in primer sites
+
+- Tune bowtie2 to allow ACGT -> N substitutions in primer sites, at the moment only single N insertions are allowed
+
+- What to do with genome ends (amplicon 1 and 98)? ATM they are dropped fairly consistantly because the leftmost and rightmost primer sites don't exist on most genomes that we look at except for the Wuhan reference. 
+
 - Simulate other PCR products (how? Chimeras -> Simera + Point mutations -> with a script? /ignore Chimeras for now.)
+
+- genome_abundances.csv should be able to cope with multiple rows / abundances pointing to the same genome. This is actually going to be a bit annoying to fix because the way it's done now, you'd end up with multiple rows with exactly the same id in the fastq. 
+
+- Test the 'custom' amplicon distribution method (Nicola's method) make sure it works as intended - this is already implemented but needs testing. Additionally on this point, Nicola asked for multinomial sampling from each set of reads and also for the ability to read from a SAM or BAM file, this is currently not supported. 
+
+- Generate a log file which saves the input parameters.
+
+- Try to run this program on EBI resources rather than on my laptop and uploading.
+
+- Give Nick a demo of the working software.
+
+- Fix the other sampling forms, at the moment just DIRICHLET_1 works (and possibly Nicola's custom distribution). 
+
+- Cruddiness parameter should be able to be different for each genome, and a place for that information is in the tsv file containing the
+genome abundances. If there's a command line value, use that for all the genomes, if there isn't then 
+
+- Random seed, if not given as a command line input make sure it's recorded somewhere in a log file. 
+
+- Command line switch to delete the command line stuff. 
 
 ## Aknowledgements
 
