@@ -1,6 +1,7 @@
 from numpy.random import dirichlet, binomial, multinomial
 import numpy as np
 import pandas as pd
+import logging
 
 
 def get_amplicon_reads_sampler(amplicon_distribution, amplicon_distribution_file, amplicon_pseudocounts_c, genome_abundances, total_n_reads):
@@ -9,10 +10,13 @@ def get_amplicon_reads_sampler(amplicon_distribution, amplicon_distribution_file
 
         amplicon_distribution_dict = {}
         with open(amplicon_distribution_file) as adf:
-            genome_names = adf.readline().split(",")
+            genome_names = adf.readline().split("\t")
             amplicon_distribution_dict = {g: [] for g in genome_names}
 
         def hyperparam_sampler(dataframe_row):
+            return -1
+
+        def genome_count_sampler(dataframe_row):
             return -1
 
         def prob_sampler(dataframe_row):
@@ -29,7 +33,7 @@ def get_amplicon_reads_sampler(amplicon_distribution, amplicon_distribution_file
         genome_counts = multinomial(total_n_reads, [genome_abundances[i] for i in sorted(genome_abundances.keys())])
         genome_counts = {k:genome_counts[i] for i,k in enumerate(sorted(genome_abundances.keys()))}
         
-        hyperparams = pd.read_csv(amplicon_distribution_file)
+        hyperparams = pd.read_csv(amplicon_distribution_file, sep="\t")
         hyperparams = {t.amplicon_number:t.hyperparameter for t in hyperparams.itertuples()}
         probs = dirichlet(np.array([hyperparams[i] for i in sorted(hyperparams.keys())], dtype=float) * float(amplicon_pseudocounts_c))
         
@@ -59,7 +63,7 @@ def get_amplicon_reads_sampler(amplicon_distribution, amplicon_distribution_file
         genome_counts = multinomial(total_n_reads, [genome_abundances[i] for i in sorted(genome_abundances.keys())])
         genome_counts = {i:genome_counts[i] for i in sorted(genome_abundances.keys())}
 
-        hyperparams = pd.read_csv(amplicon_distribution_file)
+        hyperparams = pd.read_csv(amplicon_distribution_file, sep="\t")
         hyperparams = {t.amplicon_number:t.hyperparameter for t in hyperparams.itertuples()}
         hyperparams = np.array([hyperparams[i] for i in sorted(hyperparams.keys())], dtype=float)
         
@@ -74,6 +78,8 @@ def get_amplicon_reads_sampler(amplicon_distribution, amplicon_distribution_file
             nonlocal genomes_list
             nonlocal hyperparams
             nonlocal amplicon_pseudocounts_c
+            if type(amplicon_pseudocounts_c) == int:
+                amplicon_pseudocounts_c = [amplicon_pseudocounts_c for i in range(len(genomes_list))]
             if not dataframe_row.ref in genomes_list:
                 genomes_list[dataframe_row.ref] = dirichlet(amplicon_pseudocounts_c * hyperparams)
 
@@ -85,7 +91,7 @@ def get_amplicon_reads_sampler(amplicon_distribution, amplicon_distribution_file
             return binomial(round(d.total_n_reads * d.abundance), d.amplicon_prob)
 
     else:
-        print("Amplicon distribution not recognised, pick one of EXACT, DIRICHLET_1, DIRICHLET_2.")
+        logging.info("Amplicon distribution not recognised, pick one of EXACT, DIRICHLET_1, DIRICHLET_2.")
         exit(1)
 
     return  genome_count_sampler, hyperparam_sampler, prob_sampler, reads_sampler

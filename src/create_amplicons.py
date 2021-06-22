@@ -3,6 +3,7 @@ from os.path import join, basename
 from io import StringIO
 from Bio import SeqIO
 import pandas as pd
+import logging
 
 
 def build_index(genome_path, genome_filename_short, indices_folder):
@@ -38,7 +39,7 @@ def align_primers(genome_path, genome_filename_short, indices_folder, primers_fi
     for r in df.itertuples():
         if r.ref == "*":
             if verbose:
-                print(f"Dropping amplicon {r.amplicon_number}, couldn't find a match for the primer {r.seq}")
+                logging.info(f"Dropping amplicon {r.amplicon_number}, couldn't find a match for the primer {r.seq}")
 
             drop_rows.append(r.Index)
     
@@ -71,8 +72,8 @@ def align_primers(genome_path, genome_filename_short, indices_folder, primers_fi
 
 
     if verbose:
-        print("First 5 rows: ")
-        print(df.head())
+        logging.info("First 5 rows: ")
+        logging.info(df.head())
 
     return df
 
@@ -86,10 +87,10 @@ def write_amplicon(df, reference, genome_filename_short, amplicons_folder, verbo
             amplicon = reference_string[r.left - 1: r.right + r.right_primer_length - 1]
             
             if verbose:
-                print(f">{reference.id}_amplicon_{amplicon_number}" + ("_alt" if alt else ""))
-                print("length: " + str(r.right - r.left))
-                print(amplicon + "\n")
-                print(r.left_primer + "-"* (r.right - r.left - r.left_primer_length) + r.right_primer + "\n")     
+                logging.info(f">{reference.id}_amplicon_{amplicon_number}" + ("_alt" if alt else ""))
+                logging.info("length: " + str(r.right - r.left))
+                logging.info(amplicon + "\n")
+                logging.info(r.left_primer + "-"* (r.right - r.left - r.left_primer_length) + r.right_primer + "\n")     
 
             with open(f"{amplicons_folder}/{genome_filename_short}_amplicon_{amplicon_number}" + ("_alt" if alt else "") + ".fasta", "w") as f:
 
@@ -104,10 +105,10 @@ if __name__=="__main__":
     parser.add_argument("--genome_path", "-g", help="Path to the genome of interest.")
     parser.add_argument("--amplicons_folder", "-am", help="Folder where the output amplicons will go.")
     parser.add_argument("--indices_folder", "-i", help="Folder where bowtie2 indices are created and stored.")
-    parser.add_argument("--primers_file", "-p", help="Path to fastq file of primers. Default ARTIC V3 primers.")
+    parser.add_argument("--primers_file", "-p", help="Path to fastq file of primers. Default ARTIC V1 primers.")
     parser.add_argument("--verbose", help="Verbose mode.")
 
-    # genome_path, genome_filename_short, indices_folder, primers_files, verbose
+
     args = parser.parse_args()
     genome_filename_short = ".".join(basename(args.genome_path).split(".")[:-1])
     reference = SeqIO.read(args.genome_path, format="fasta")

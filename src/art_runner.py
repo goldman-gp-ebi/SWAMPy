@@ -7,7 +7,7 @@ from io import StringIO
 import numpy as np
 from contextlib import contextmanager
 import string
-
+import logging
 
 
 class ArtIllumina:
@@ -40,7 +40,7 @@ class ArtIllumina:
         for a, n in params:
             
             short_name = ".".join(basename(a).split(".")[:-1])
-            print(f"Starting on file {short_name}.fasta with {n} reads")
+            logging.info(f"Starting on file {short_name}.fasta with {n} reads")
             self.run_once(a, n, "tmp.sms."+short_name+".", np.random.randint(2 ** 63))
 
 
@@ -57,18 +57,18 @@ class ArtIllumina:
                 with open(r2, "r") as r2fh:
                     shutil.copyfileobj(r2fh, all_r2)
 
-        print("Creating random data for shuffle.")
+        logging.info("Creating random data for shuffle.")
         with open("./tmp.sms.random_data", "w") as random_data:
             ALPHABET = np.array(list(string.ascii_lowercase))
             random_data.write("".join(np.random.choice(ALPHABET, size=5000000)))
 
         # shuffle the fastq's so that the reads are in a random order. 
-        shuffle_fastq_file("./tmp.sms.all_files_unshuffled1.fastq", f"./{self.output_filename_prefix}1.fastq", "./tmp.sms.random_data")
-        shuffle_fastq_file("./tmp.sms.all_files_unshuffled2.fastq", f"./{self.output_filename_prefix}2.fastq", "./tmp.sms.random_data")
+        shuffle_fastq_file("./tmp.sms.all_files_unshuffled1.fastq", join(self.outpath, f"{self.output_filename_prefix}_R1.fastq"), "./tmp.sms.random_data")
+        shuffle_fastq_file("./tmp.sms.all_files_unshuffled2.fastq", join(self.outpath, f"{self.output_filename_prefix}_R2.fastq"), "./tmp.sms.random_data")
 
 
 def shuffle_fastq_file(input_filename, output_filename, random_seed):
-    print(f"Shuffling {output_filename}")
+    logging.info(f"Shuffling {output_filename}")
     # additionally, this changes all '&' characters back to '/' characters. 
     os.system(f"paste -s -d '\t\t\t\n' {input_filename} | shuf --random-source={random_seed} | tr '\t&' '\n/' > {output_filename}")
 
@@ -79,7 +79,7 @@ def art_illumina(outpath, output_filename_prefix):
         yield ArtIllumina(outpath, output_filename_prefix)
     
     finally:
-        print("Exiting sars-cov-2 metagenome simulator - tidying up.")
+        logging.info("Exiting sars-cov-2 metagenome simulator - tidying up.")
 
         for temp in glob.glob("./tmp.sms.*"):
             os.remove(temp)
