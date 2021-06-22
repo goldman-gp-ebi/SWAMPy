@@ -91,7 +91,7 @@ and my_file_amplicon_abundances_summary.tsv (a tsv output summarising statistics
 - amplicon_distribution_file: a file containing a vector for the Dirchlet distribution governing the amplicon distribution. 
 
 - amplicon_pseudocounts: scaling factor for the above vector - higher corresponds to higher 'quality', lower will have more variation in amplicon
-distributions between different runs. 
+distributions between different runs. A reasonable value for this seems to be 10000 (the default). 
 
 
 
@@ -108,6 +108,11 @@ Also watch out for long runs of N's in the primer sites, if these are there then
 but other whitespace characters or special characters could cause a bug. 
 
 - Note that the reads in the fastq files are both shuffled by a randomly chosen permutation. 
+
+- The option 'dirichlet_1' relates to how numbers of reads for each genome and for each amplicon are drawn. At the moment
+this is done using multiple Multinomial(N_genome, p) draws, where p is drawn once from a Dirichlet(\alpha * c) distribution. 
+Here c is a scalar, the amplicon_pseudocounts number, and \alpha is a vector, scaled to have length 1, goverened by the amplicon_distribution file. N_genome is the number of reads for each genome, this is taken from the genome_abundances file. In the future, slightly different methods
+of taking these draws may be possible, so this method is called 'dirichlet_1'. 
 
 
 ## How it works
