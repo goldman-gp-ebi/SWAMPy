@@ -20,6 +20,9 @@ pip install pandas, biopython
 sudo apt-get install art_illumina, bowtie2
 ```
 
+You will also need to place a multi-fasta 'genomes.fasta' file in the example folder - we can send this file to you
+but since the sequences are from GISAID we have not uploaded these to github. 
+
 ## Quickstart
 
 ```
