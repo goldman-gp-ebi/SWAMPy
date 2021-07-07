@@ -207,11 +207,7 @@ genome abundances. If there's a command line value, use that for all the genomes
 
 - Command line switch to delete the temporary folders. 
 
-- Keep track of progress on the bowtie2 stuff so that you can see your progress e.g. "genome 1/3 completed."
-
 - For the loop of reads, each time it's on the outer loop (of genomes) keep track. 
-
-- In the logging remove the dataframe head parts. 
 
 ## Aknowledgements
 

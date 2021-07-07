@@ -142,6 +142,8 @@ if __name__ == "__main__":
         for k in genome_abundances.keys():
             genome_abundances[k] /= total
 
+        n_genomes = len(genome_abundances)
+
     # Split genome file into multiple separate files
     for genome in SeqIO.parse(GENOMES_FILE, format="fasta"):
         filepath = genome.description.replace(" ", "&").replace("/", "&")
@@ -158,9 +160,12 @@ if __name__ == "__main__":
         reference = SeqIO.read(genome_path, format="fasta")
 
         # use bowtie2 to create a dataframe with positions of each primer pair aligned to the genome
-        logging.info(f"Using bowtie2 to align primers to genome {reference.description}")
+        if VERBOSE:
+            logging.info(f"Working on genome {genome_counter} of {n_genomes}")
+            logging.info(f"Using bowtie2 to align primers to genome {reference.description}")
+            
         build_index(genome_path, genome_filename_short, INDICES_FOLDER)
-        df = align_primers(genome_path, genome_filename_short, INDICES_FOLDER, PRIMERS_FILE, VERBOSE)        
+        df = align_primers(genome_path, genome_filename_short, INDICES_FOLDER, PRIMERS_FILE, False)        
         df["abundance"] = genome_abundances[df["ref"][0]]
         
         # write the amplicon to a file
