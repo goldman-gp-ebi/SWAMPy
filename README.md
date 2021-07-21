@@ -56,7 +56,7 @@ python simulate_metagenome.py \
     --seed 10 \
     --verbose  True \
     --amplicon_distribution  dirichlet_1 \
-    --amplicon_distribution_file ../example/amplicon_distribution.tsv \
+    --amplicon_distribution_file ../example/artic_v3_amplicon_distribution.tsv \
     --amplicon_pseudocounts 10000 
 
 # my_example1.fastq and my_example2.fastq should appear in simulation_output folder, as well as my_example_amplicon_abundances_summary.tsv

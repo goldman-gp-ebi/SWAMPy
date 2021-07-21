@@ -27,7 +27,7 @@ N_READS = 100000
 SEED = np.random.randint(1000000000)
 VERBOSE = True
 AMPLICON_DISTRIBUTION = "DIRICHLET_1"
-AMPLICON_DISTRIBUTION_FILE = join(BASE_DIR, "amplicon_distribution.tsv")
+AMPLICON_DISTRIBUTION_FILE = join(BASE_DIR, "artic_v3_amplicon_distribution.tsv")
 AMPLICON_PSEUDOCOUNTS = 10000
 AUTOREMOVE = False
 
