@@ -158,8 +158,8 @@ of taking these draws may be possible, so this method is called 'dirichlet_1'.
     - Vector a is expected at this stage to satisfy sum(a) == 1. 
     - Next, a is scaled by the amplicon_pseudocounts, c. I.e. a = a*c
     - Sample an amplicon abundance profile using p = Dir(a), Dirichlet distribution.
-    - Each amplicon in the amplicon population dataframe is then given a number of reads according to the formula N_i = Binomial(N_genome, p_i), 
-    where i is an index running over the amplicons (the amplicon number) and N_genome = int(NREADS * genome_proportion).
+    - Each amplicon in the amplicon population dataframe is then given a number of reads according by drawing from Multinomial(N_genome, p), 
+    where N_genome = int(NREADS * genome_proportion).
     - All of the above data is adjoined to the amplicon dataframe from step 2. 
 
 4. For each row in the amplicon dataframe, run art_illumina with the required numbers of reads. At present we simulate with parameters appropriate for Illumina MiSeq v3, paired-end, 250bp, using the following parameters:
