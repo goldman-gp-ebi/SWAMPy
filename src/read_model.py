@@ -61,7 +61,7 @@ def get_amplicon_reads_sampler(amplicon_distribution, amplicon_distribution_file
         
         genomes_list = {}
         genome_counts = multinomial(total_n_reads, [genome_abundances[i] for i in sorted(genome_abundances.keys())])
-        genome_counts = {i:genome_counts[i] for i in sorted(genome_abundances.keys())}
+        genome_counts = {k:genome_counts[i] for i, k in enumerate(sorted(genome_abundances.keys()))}
 
         hyperparams = pd.read_csv(amplicon_distribution_file, sep="\t")
         hyperparams = {t.amplicon_number:t.hyperparameter for t in hyperparams.itertuples()}
@@ -72,13 +72,14 @@ def get_amplicon_reads_sampler(amplicon_distribution, amplicon_distribution_file
             return hyperparams[dataframe_row.amplicon_number - 1]
 
         def genome_count_sampler(dataframe_row):
-            pass
+            nonlocal genome_counts
+            return genome_counts[dataframe_row.ref]
         
-        def prob_samplier(dataframe_row):
+        def prob_sampler(dataframe_row):
             nonlocal genomes_list
             nonlocal hyperparams
             nonlocal amplicon_pseudocounts_c
-            if type(amplicon_pseudocounts_c) == int:
+            if type(amplicon_pseudocounts_c) == float:
                 amplicon_pseudocounts_c = [amplicon_pseudocounts_c for i in range(len(genomes_list))]
             if not dataframe_row.ref in genomes_list:
                 genomes_list[dataframe_row.ref] = dirichlet(amplicon_pseudocounts_c * hyperparams)

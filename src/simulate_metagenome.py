@@ -24,6 +24,8 @@ PRIMERS_FILE = join(BASE_DIR, "artic_sars-cov-2_primers_no_alts.fastq")
 OUTPUT_FOLDER = os.getcwd()
 OUTPUT_FILENAME_PREFIX = "example"
 N_READS = 100000
+READ_LENGTH = 250
+SEQ_SYS = "MSv3"
 SEED = np.random.randint(1000000000)
 VERBOSE = True
 AMPLICON_DISTRIBUTION = "DIRICHLET_1"
@@ -41,7 +43,13 @@ def setup_parser():
     parser.add_argument("--primers_file", "-p", help="Path to fastq file of primers. Default ARTIC V1 primers.", default=PRIMERS_FILE)
     parser.add_argument("--output_folder", "-o", help="Folder where the output fastq files will be stored,", default=OUTPUT_FOLDER)
     parser.add_argument("--output_filename_prefix", "-x", help="Name of the fastq files name1.fastq, name2.fastq", default=OUTPUT_FILENAME_PREFIX)
-    parser.add_argument("--nreads", "-n", help="Approximate number of reads in fastq file (subject to sampling stochasticity).", default=N_READS)
+    parser.add_argument("--seqSys", help="Name of the sequencing system, options to use are given by the art_illumina help text, and are:" + 
+    """GA1 - GenomeAnalyzer I (36bp,44bp), GA2 - GenomeAnalyzer II (50bp, 75bp)
+           HS10 - HiSeq 1000 (100bp),          HS20 - HiSeq 2000 (100bp),      HS25 - HiSeq 2500 (125bp, 150bp)
+           HSXn - HiSeqX PCR free (150bp),     HSXt - HiSeqX TruSeq (150bp),   MinS - MiniSeq TruSeq (50bp)
+           MSv1 - MiSeq v1 (250bp),            MSv3 - MiSeq v3 (250bp),        NS50 - NextSeq500 v2 (75bp)""", default="MSv3")
+    parser.add_argument("--n_reads", "-n", help="Approximate number of reads in fastq file (subject to sampling stochasticity).", default=N_READS)
+    parser.add_argument("--read_length", "-l", help="Length of reads taken from the sequencing machine.", default=READ_LENGTH)
     parser.add_argument("--seed", "-s", help="Random seed", default=SEED)
     parser.add_argument("--verbose", "-vb", help="Verbose output", default=VERBOSE)
     parser.add_argument("--amplicon_distribution", default=AMPLICON_DISTRIBUTION)
@@ -88,8 +96,11 @@ def load_command_line_args():
     )
 
     global N_READS
-    N_READS = int(args.nreads)
+    N_READS = int(args.n_reads)
     logging.info(f"Number of reads: {N_READS}")
+
+    global READ_LENGTH
+    READ_LENGTH = int(args.read_length)
 
     global SEED
     SEED = args.seed
@@ -154,6 +165,7 @@ if __name__ == "__main__":
     # STEP 2: Simulate Amplicon Population
     genome_counter = 0
     for genome_path in genome_abundances:
+        genome_counter += 1
         genome_path = genome_path.replace(" ", "&").replace("/", "&") + ".fasta"
         genome_path = join(GENOMES_FOLDER, genome_path)
         genome_filename_short = ".".join(basename(genome_path).split(".")[:-1])
@@ -222,7 +234,7 @@ if __name__ == "__main__":
     n_reads = list(df_amplicons["n_reads"])
 
     logging.info("Generating reads using art_illumina, cycling through all genomes and remaining amplicons.")
-    with art_illumina(OUTPUT_FOLDER, OUTPUT_FILENAME_PREFIX) as art:
+    with art_illumina(OUTPUT_FOLDER, OUTPUT_FILENAME_PREFIX, READ_LENGTH, SEQ_SYS) as art:
         art.run(amplicons, n_reads)
 
     # STEP 5: Clean up all of the temp. directories
@@ -231,7 +243,8 @@ if __name__ == "__main__":
         i = "y"
         
         if not AUTOREMOVE:
-            logging.info(f"Press y and enter if you are ok with all files in the directory {directory} being deleted.")
+            logging.info(f"Press y and enter if you are ok with all files in the directory {directory}" +
+            " being deleted (use option --autoremove True to stop showing this message).")
             i = input()
 
         if i.lower() == "y":

@@ -53,6 +53,8 @@ python simulate_metagenome.py \
     --output_folder  ../simulation_output \
     --output_filename_prefix example \
     --n_reads  100000 \
+    --seqSys MSv3 \
+    --read_length 250 \
     --seed 10 \
     --verbose  True \
     --amplicon_distribution  dirichlet_1 \
@@ -85,7 +87,15 @@ and my_file_amplicon_abundances_summary.tsv (a tsv output summarising statistics
 
 - n_reads: a target number of reads - the true number of reads may be lower if some amplicons drop out
 
-- seed: seed for the random number generator (optional; if not set, a random seed is set and recorded)
+- seqSys: name of the sequencing system, options to use are given by the art_illumina help text, and are:
+    GA1 - GenomeAnalyzer I (36bp,44bp), GA2 - GenomeAnalyzer II (50bp, 75bp)
+    HS10 - HiSeq 1000 (100bp),          HS20 - HiSeq 2000 (100bp),      HS25 - HiSeq 2500 (125bp, 150bp)
+    HSXn - HiSeqX PCR free (150bp),     HSXt - HiSeqX TruSeq (150bp),   MinS - MiniSeq TruSeq (50bp)
+    MSv1 - MiSeq v1 (250bp),            MSv3 - MiSeq v3 (250bp),        NS50 - NextSeq500 v2 (75bp). Default is MSv3
+
+- read_length: lengths of the reads coming off the sequencer (default is 250). 
+
+- seed: seed for the random number generator (optional; if not set, a random seed is set and recorded in the log file)
 
 - verbose: Verbose mode for both the log file and the terminal output. 
 
@@ -108,7 +118,7 @@ This is because the leftmost primer 1 and rightmost primer 98 basically never ma
 Also watch out for long runs of N's in the primer sites, if these are there then that amplicon will drop out. 
 
 - Special characters in the fasta genome ids could potentially cause a problem. In the code, the characters "/" and " " are dealt with,
-but other whitespace characters or special characters could cause a bug. 
+but other whitespace characters or special characters such as "&" could cause a bug. 
 
 - Note that the reads in the fastq files are both shuffled by a randomly chosen permutation. 
 
@@ -172,7 +182,7 @@ of taking these draws may be possible, so this method is called 'dirichlet_1'.
             --rndSeed random_number \
             --noALN \
             --maskN 0  \
-            --seqSys MSv3 \
+            --seqSys seqSys(default MSv3) \
             --in amplicon_file.fasta \
             --len 250 \
             --rcount n_reads \
@@ -197,18 +207,10 @@ of taking these draws may be possible, so this method is called 'dirichlet_1'.
 
 - Simulate other PCR products (how? Chimeras -> Simera + Point mutations -> with a script? /ignore Chimeras for now.)
 
-- genome_abundances.tsv should be able to cope with multiple rows / abundances pointing to the same genome. This is actually going to be a bit annoying to fix because the way it's done now, you'd end up with multiple rows with exactly the same id in the fastq. 
-
 - Test the 'exact' amplicon distribution method (Nicola's method) make sure it works as intended - this is already implemented but needs testing. Additionally on this point, Nicola asked for multinomial sampling from each set of reads and also for the ability to read from a SAM or BAM file, this is currently not supported. 
-
-- Try to run this program on EBI resources rather than on my laptop and uploading.
-
-- Fix the other sampling forms, at the moment just DIRICHLET_1 works (and possibly Nicola's custom distribution). 
 
 - Cruddiness parameter should be able to be different for each genome, and a place for that information is in the tsv file containing the
 genome abundances. If there's a command line value, use that for all the genomes, if there isn't then look in the genome abundances, otherwise use a default. 
-
-- Command line switch to delete the temporary folders. 
 
 - For the loop of reads, each time it's on the outer loop (of genomes) keep track. 
 

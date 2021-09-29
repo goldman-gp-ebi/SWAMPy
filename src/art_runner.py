@@ -12,26 +12,38 @@ import logging
 
 class ArtIllumina:
 
-    def __init__(self, outpath, output_filename_prefix):
+    def __init__(self, outpath, output_filename_prefix, read_length, seq_sys):
         self.outpath = outpath
         self.output_filename_prefix = output_filename_prefix
+        self.read_length = read_length
+        self.seq_sys = seq_sys
 
     def run_once(self, infile, n_reads, out_prefix, rnd_seed):
 
-        subprocess.run([
+        op = subprocess.run([
             "art_illumina", 
             "--amplicon",
-            "--quiet",
+            #"--quiet",
             "--paired",
             "--rndSeed", str(rnd_seed),
             "--noALN",
             "--maskN", str(0), 
-            "--seqSys", "MSv3",
+            "--seqSys", self.seq_sys, #"MSv3"
             "--in", infile,
-            "--len", "250",
+            "--len", str(self.read_length),
             "--rcount", str(n_reads),
             "--out", out_prefix 
-        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        ], capture_output=True)
+
+        message_lines = op.stdout.decode("ASCII").split("\n")[-4:-2]
+        warning = op.stderr.decode("ASCII")
+
+        for line in message_lines:
+            logging.info("art_illumina: " + line)
+        if warning != "Warning: your simulation will not output any ALN or SAM file with your parameter settings!\n":
+            logging.warning(warning)
+
+        
 
     def run(self, amplicons, n_reads):
 
@@ -73,10 +85,10 @@ def shuffle_fastq_file(input_filename, output_filename, random_seed):
     os.system(f"paste -s -d '\t\t\t\n' {input_filename} | shuf --random-source={random_seed} | tr '\t&' '\n/' > {output_filename}")
 
 @contextmanager
-def art_illumina(outpath, output_filename_prefix):
+def art_illumina(outpath, output_filename_prefix, read_length, seq_sys):
     
     try:
-        yield ArtIllumina(outpath, output_filename_prefix)
+        yield ArtIllumina(outpath, output_filename_prefix, read_length, seq_sys)
     
     finally:
         logging.info("Exiting sars-cov-2 metagenome simulator - tidying up.")
