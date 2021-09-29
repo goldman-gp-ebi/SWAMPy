@@ -49,7 +49,7 @@ python simulate_metagenome.py \
     --amplicons_folder ../example/amplicons \
     --indices_folder  ../example/indices \
     --genome_abundances  ../example/abundances.tsv \
-    --primers_file  ../example/artic_sars-cov-2_primers_no_alts.fastq \
+    --primers_file  ../example/artic_v3_primers_no_alts.fastq \
     --output_folder  ../simulation_output \
     --output_filename_prefix example \
     --n_reads  100000 \
@@ -142,7 +142,7 @@ of taking these draws may be possible, so this method is called 'dirichlet_1'.
         {primer sequence}
         +
         {dummy quality scores (ignored)} 
-        (see example/artic_sars-cov-2_primers_no_alts.fastq)
+        (see example/artic_v3_primers_no_alts.fastq)
         
     - amplicon_distribution.tsv - in the format amplicon_number \t hyperparameter
         (see example/amplicon_distribution.csv)
