@@ -56,12 +56,11 @@ python simulate_metagenome.py \
     --seqSys MSv3 \
     --read_length 250 \
     --seed 10 \
-    --verbose  True \
     --amplicon_distribution  dirichlet_1 \
     --amplicon_distribution_file ../example/artic_v3_amplicon_distribution.tsv \
     --amplicon_pseudocounts 10000 
 
-# my_example1.fastq and my_example2.fastq should appear in simulation_output folder, as well as my_example_amplicon_abundances_summary.tsv
+# example1.fastq and example2.fastq should appear in simulation_output folder, as well as example_amplicon_abundances_summary.tsv
 # While running, some tmp files might appear in your working directory, but they will get cleaned up when the program terminates
 # (even if it exits with an error).
 

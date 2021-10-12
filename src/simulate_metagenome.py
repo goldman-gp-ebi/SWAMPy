@@ -27,35 +27,33 @@ N_READS = 100000
 READ_LENGTH = 250
 SEQ_SYS = "MSv3"
 SEED = np.random.randint(1000000000)
-VERBOSE = True
 AMPLICON_DISTRIBUTION = "DIRICHLET_1"
 AMPLICON_DISTRIBUTION_FILE = join(BASE_DIR, "artic_v3_amplicon_distribution.tsv")
 AMPLICON_PSEUDOCOUNTS = 10000
-AUTOREMOVE = False
 
 def setup_parser():
     parser = argparse.ArgumentParser(description="Run SARS-CoV-2 metagenome simulation.")
-    parser.add_argument("--genomes_file", help="File containing all of the genomes that might be used", default=GENOMES_FILE)
-    parser.add_argument("--genomes_folder", "-g", help="A temporary folder containing fasta files of genomes used in the simulation.", default=GENOMES_FOLDER)
-    parser.add_argument("--amplicons_folder", "-am", help="A temporary folder that will contain amplicons of all the genomes.", default=AMPLICONS_FOLDER)
-    parser.add_argument("--indices_folder", "-i", help="A temporary folder where bowtie2 indices are created and stored.", default=INDICES_FOLDER)
-    parser.add_argument("--genome_abundances", "-ab", help="TSV of genome abundances.", default=ABUNDANCES_FILE)
-    parser.add_argument("--primers_file", "-p", help="Path to fastq file of primers. Default ARTIC V1 primers.", default=PRIMERS_FILE)
-    parser.add_argument("--output_folder", "-o", help="Folder where the output fastq files will be stored,", default=OUTPUT_FOLDER)
-    parser.add_argument("--output_filename_prefix", "-x", help="Name of the fastq files name1.fastq, name2.fastq", default=OUTPUT_FILENAME_PREFIX)
-    parser.add_argument("--seqSys", help="Name of the sequencing system, options to use are given by the art_illumina help text, and are:" + 
+    parser.add_argument("--genomes_file", metavar='', help="File containing all of the genomes that might be used", default=GENOMES_FILE)
+    parser.add_argument("--genomes_folder", "-g", metavar='', help="A temporary folder containing fasta files of genomes used in the simulation.", default=GENOMES_FOLDER)
+    parser.add_argument("--amplicons_folder", "-am", metavar='', help="A temporary folder that will contain amplicons of all the genomes.", default=AMPLICONS_FOLDER)
+    parser.add_argument("--indices_folder", "-i", metavar='', help="A temporary folder where bowtie2 indices are created and stored.", default=INDICES_FOLDER)
+    parser.add_argument("--genome_abundances", "-ab", metavar='', help="TSV of genome abundances.", default=ABUNDANCES_FILE)
+    parser.add_argument("--primers_file", "-p", metavar='', help="Path to fastq file of primers. Default ARTIC V1 primers.", default=PRIMERS_FILE)
+    parser.add_argument("--output_folder", "-o", metavar='', help="Folder where the output fastq files will be stored,", default=OUTPUT_FOLDER)
+    parser.add_argument("--output_filename_prefix", "-x", metavar='', help="Name of the fastq files name1.fastq, name2.fastq", default=OUTPUT_FILENAME_PREFIX)
+    parser.add_argument("--seqSys", metavar='', help="Name of the sequencing system, options to use are given by the art_illumina help text, and are:" + 
     """GA1 - GenomeAnalyzer I (36bp,44bp), GA2 - GenomeAnalyzer II (50bp, 75bp)
            HS10 - HiSeq 1000 (100bp),          HS20 - HiSeq 2000 (100bp),      HS25 - HiSeq 2500 (125bp, 150bp)
            HSXn - HiSeqX PCR free (150bp),     HSXt - HiSeqX TruSeq (150bp),   MinS - MiniSeq TruSeq (50bp)
            MSv1 - MiSeq v1 (250bp),            MSv3 - MiSeq v3 (250bp),        NS50 - NextSeq500 v2 (75bp)""", default="MSv3")
-    parser.add_argument("--n_reads", "-n", help="Approximate number of reads in fastq file (subject to sampling stochasticity).", default=N_READS)
-    parser.add_argument("--read_length", "-l", help="Length of reads taken from the sequencing machine.", default=READ_LENGTH)
-    parser.add_argument("--seed", "-s", help="Random seed", default=SEED)
-    parser.add_argument("--verbose", "-vb", help="Verbose output", default=VERBOSE)
-    parser.add_argument("--amplicon_distribution", default=AMPLICON_DISTRIBUTION)
-    parser.add_argument("--amplicon_distribution_file", default=AMPLICON_DISTRIBUTION_FILE)
-    parser.add_argument("--amplicon_pseudocounts","-c", default=AMPLICON_PSEUDOCOUNTS)
-    parser.add_argument("--autoremove", default=AUTOREMOVE)
+    parser.add_argument("--n_reads", "-n", metavar='', help="Approximate number of reads in fastq file (subject to sampling stochasticity).", default=N_READS)
+    parser.add_argument("--read_length", "-l", metavar='', help="Length of reads taken from the sequencing machine.", default=READ_LENGTH)
+    parser.add_argument("--seed", "-s", metavar='', help="Random seed", default=SEED)
+    parser.add_argument("--quiet", "-vb", help="Add this flag to supress verbose output." ,action='store_true')
+    parser.add_argument("--amplicon_distribution", metavar='', default=AMPLICON_DISTRIBUTION)
+    parser.add_argument("--amplicon_distribution_file", metavar='', default=AMPLICON_DISTRIBUTION_FILE)
+    parser.add_argument("--amplicon_pseudocounts","-c", metavar='', default=AMPLICON_PSEUDOCOUNTS)
+    parser.add_argument("--autoremove", action='store_true',help="Add this flag to delete temproray files after execution.")
     
     return parser
 
@@ -108,7 +106,7 @@ def load_command_line_args():
     logging.info(f"Random seed: {SEED}")
 
     global VERBOSE
-    VERBOSE = args.verbose
+    VERBOSE = not args.quiet
 
     global AMPLICON_DISTRIBUTION
     AMPLICON_DISTRIBUTION = args.amplicon_distribution
@@ -244,7 +242,7 @@ if __name__ == "__main__":
         
         if not AUTOREMOVE:
             logging.info(f"Press y and enter if you are ok with all files in the directory {directory}" +
-            " being deleted (use option --autoremove True to stop showing this message).")
+            " being deleted (use flag --autoremove to stop showing this message).")
             i = input()
 
         if i.lower() == "y":
