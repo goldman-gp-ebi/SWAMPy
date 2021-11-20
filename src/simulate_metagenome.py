@@ -151,7 +151,7 @@ if __name__ == "__main__":
         for k in genome_abundances.keys():
             genome_abundances[k] /= total
 
-        n_genomes = len(genome_abundances)
+    n_genomes = len(genome_abundances)
 
     # Split genome file into multiple separate files
     for genome in SeqIO.parse(GENOMES_FILE, format="fasta"):
