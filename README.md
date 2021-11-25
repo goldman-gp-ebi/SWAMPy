@@ -37,7 +37,7 @@ mkdir ../simulation_output
 # Run the example simulation.
 # This creates a synthetic metagenome from the fasta files in the example/genomes folder, using relative genome proportions 
 # from the example/abundances.tsv.
-# The primers used are from the ARTIC protocol v1; compared to v3, the primers marked as 'alt' are removed. 
+# The primers used are from the ARTIC protocol v1; compared to v3, the primers marked as 'alt' are removed. For details, please see the potential bugs section below.
 
 python simulate_metagenome.py 
 
@@ -125,6 +125,8 @@ but other whitespace characters or special characters such as "&" could cause a 
 this is done using multiple Multinomial(N_genome, p) draws, where p is drawn once from a Dirichlet(\alpha * c) distribution. 
 Here c is a scalar, the amplicon_pseudocounts number, and \alpha is a vector, scaled to have length 1, goverened by the amplicon_distribution file. N_genome is the number of reads for each genome, this is taken from the genome_abundances file. In the future, slightly different methods
 of taking these draws may be possible, so this method is called 'dirichlet_1'. 
+
+- Alt primers are only really relevant to **Artic v3**. Artic v3 has extra primers which are tagged as ALT - these are 'alternative' primer ends for certain amplicons where the original amplicons were dropping out a lot. I believe that these 'alt' primers are added to the primer pool along with the original primers. Therefore for these amplicons (where alt primers exist), there are a total of 4 possible versions of the amplicon that could be made, depending on whether the left/right end was used with the alt primer or not. In the original version of this code, we would only simulate 2 of these possibilities - cases where both ends used the original primer and cases where both ends used the alt primer. However since then, because Artic v4 (which we assume will end up superseding artic v3) was released, and has no alts (and also most other sequencing protocols have no alts either) we decided to ignore alt primers altogether, and our version of artic does not include any simulation of alt primers. If you want this feature please contact us
 
 
 ## How it works
