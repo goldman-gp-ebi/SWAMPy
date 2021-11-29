@@ -66,11 +66,10 @@ def amplicon_lookup(PRIMER_BED,position):
     corresponding_amplicons=list(df.loc[(df["Start_x"]<=position)&(position<=df["End_y"]),"Amp_no"])
     return corresponding_amplicons
  
-#amp should be string, CHECK THAT!!!!!!!!!!!!!!!!!!!!!!!!!!!
 def choose_reads_to_mutate(df_row):
     reads=[]
     for amp in df_row['amplicons']:
-
+        amp # type: str
         to_mut=df_row.amplicon_source_genome_read_count_to_mutate[amp]
         for genome,n_mut in to_mut.items():
             if n_mut == 0 or df_row.amplicon_source_genome_read_count[amp][genome]==0:
@@ -85,46 +84,11 @@ def choose_reads_to_mutate(df_row):
                     reads.append(f'{genome}_amplicon_{amp}-{idx}/2')
     return reads
 
-def choose_reads_to_mutate_df(df_row):
-    reads=pd.DataFrame()
-    for amp in df_row['amplicons']:
-        
-        to_mut=df_row.amplicon_source_genome_read_count_to_mutate[amp]
-        for genome,n_mut in to_mut.items():
-            if n_mut == 0 or df_row.amplicon_source_genome_read_count[amp][genome]==0:
-                pass
-            else:
-                indices=random.sample(list(range(df_row.amplicon_source_genome_read_count[amp][genome]+1)),
-                                    k=n_mut)
-
-                indices=[(x+1)*2 for x in indices] #read names are 1 based and even numbers
-                for idx in indices:
-                    reads=reads.append(pd.DataFrame(dict(read=f'{genome}_amplicon_{amp}-{idx}/1',mut_index=df_row.mut_index),index=[0]),ignore_index=True)
-                    reads=reads.append(pd.DataFrame(dict(read=f'{genome}_amplicon_{amp}-{idx}/2',mut_index=df_row.mut_index),index=[0]),ignore_index=True)
-    return reads
-
-error_reads=errors.apply(lambda x: choose_reads_to_mutate_df(x),axis=1)
-error_reads=choose_reads_to_mutate_df(a)
-#choose_reads_to_mutate(a)
-
-#mut=errors["amplicon_source_genome_read_count_to_mutate"][1]
-#all=errors["amplicon_source_genome_read_count"][1]
-#a=[]
-#for key,value in mut.items():
-#    for key2,value2 in value.items():
-#        a.append(bool(value2<=all[key][key2]))
-        
-     
-
-amp_files=glob.glob("*amplicon_*")
 amp_n_reads=pd.read_csv("../simulation_output/example_amplicon_abundances_summary.tsv",sep="\t")
 del amp_n_reads['Unnamed: 0']
 amp_n_reads['amplicon_number']=amp_n_reads['amplicon_number'].apply(str)
 amp_n_reads_grouped=amp_n_reads.groupby(['amplicon_number']).sum()
 amp_n_reads_grouped=amp_n_reads_grouped['n_reads']
-
-amp_n_reads.loc[amp_n_reads['amplicon_number']=="41",]
-Counter(random.choices(list(amp_n_reads.loc[amp_n_reads['amplicon_number']=="97","ref"]),weights=list(amp_n_reads.loc[amp_n_reads['amplicon_number']=="97","n_reads"]),k=40))
 
 errors=pd.DataFrame(dict(errortype=["SUBS"]*SUBS_COUNT + ["INS"]*INS_COUNT + ["DEL"]*DEL_COUNT))
 errors['mut_index']=errors.index
@@ -143,16 +107,6 @@ errors["amplicon_source_genome_read_count_to_mutate"]=errors.apply(lambda x:{amp
 errors["amplicon_read_to_mutate"]=errors.apply(lambda x:choose_reads_to_mutate(x),axis=1)
 
 
-errors['read_count_to_mutate'].tolist()
-
-
-read_df=pd.DataFrame()
-for row in errors.itertuples( name='Pandas'):
-        for read in row.amplicon_read_to_mutate:
-            readf=pd.DataFrame(dict(read=read, mut_index=row.mut_index),index=[0])
-            read_df=read_df.append(readf,ignore_index=True)
-read_df.shape
-
 reads=[]
 for i in errors['amplicon_read_to_mutate'].tolist():
     reads.extend(i)
@@ -163,13 +117,22 @@ indices2=[]
 for i in indices:
     indices2.extend(i)
 
-read_df2=pd.DataFrame(zip(reads,indices2),columns=["read","mut_index"])
-
+read_df=pd.DataFrame(zip(reads,indices2),columns=["read","mut_index"])
+read_df2=read_df.groupby("read").sum()
 
 r1_list=list()
 for all_r1 in SeqIO.parse("tmp.sms.all_files_unshuffled1.fastq", format="fastq"):
-    r1_list.append(all_r1)
+    if all_r1.id in reads:
+        seq_list=list(all_r1.seq)
+        qual_list=all_r1.letter_annotations['phred_quality']
+        muts=read_df.loc[read_df["read"]==all_r1.id,"mut_index"].tolist()
+        align=pairwise2.align.localms(REF.seq, all_r1.seq,5, -1, -3, -0.5)
+        print(format_alignment(*align[0],full_sequences=True))
 
+    else:
+        pass#write back to the new file
+
+all_r1.id
 
 
 
@@ -195,7 +158,7 @@ for genome in SeqIO.parse("tmp.sms.hCoV-19&Scotland&QEUH-15AFBCE&2021|EPI_ISL_23
     break
 
 
-seq1
+seq1=genome.seq
 seq2
 set(lens)
 
@@ -210,7 +173,7 @@ seq4=list(seq1)
 seq4=seq4[:50]+["A","C","G"]+seq4[50:]
 seq4=Seq("".join(seq4))
 
-ref=reference.seq
+ref=REF.seq
 alignments = pairwise2.align.localms(seq1, seq2.reverse_complement(),10, -10, -3, -0.5)
 print(format_alignment(*alignments[0],full_sequences=True))
 alignments[0:5]
@@ -220,7 +183,7 @@ alignments[0:5]
 align1=pairwise2.align.localms(ref,seq1,5, -2, -3, -0.5)
 align2=pairwise2.align.localms(ref, seq2.reverse_complement(),10, -10, -10, -0.5)
 align3=pairwise2.align.localms(ref, seq3,5, -2, -3, -0.5)
-align4=pairwise2.align.localms(ref, seq4,5, -2, -3, -0.5)
+align4=pairwise2.align.localms(ref, seq4,5, -1, -3, -0.5)
 print(format_alignment(*align1[0]))
 print(format_alignment(*align2[0]))
 print(format_alignment(*align3[0]))
@@ -232,7 +195,7 @@ seq1[0:5]
 
 
 align3[0].seqB[align3[0].start:align3[0].end]
-align4[0].seqB[align4[0].start:align4[0].end+1]
-align4[0].seqA[align4[0].start:align4[0].end+1]
+align4[0].seqB[align4[0].start:align4[0].end]
+align4[0].seqA[align4[0].start:align4[0].end]
 
 os.getcwd()
