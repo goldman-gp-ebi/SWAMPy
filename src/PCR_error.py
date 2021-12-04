@@ -118,6 +118,7 @@ for i in df_amplicons.itertuples():
         df = pd.DataFrame(df[[0,3,5,9]])
         df = df.rename(columns={0:"name", 3:"start", 5:"CIGAR", 9: "seq"})
 
+        #if the amplicon contains too many Ns it will not align, skip introducing PCR error to those
         if df.CIGAR[0]=="*":
             amplicons.append(i.amplicon_filepath)
             n_reads.append(i.n_reads)
@@ -171,6 +172,7 @@ for i in df_amplicons.itertuples():
                 #How many reads this specific error will have
                 mut_reads=int(i.n_reads * errors.loc[mut_idx,"VAF"])
 
+                #if number of reads and/or VAF are small, this can be 0
                 if mut_reads == 0:
                     pass
                 
@@ -186,7 +188,7 @@ for i in df_amplicons.itertuples():
                     read_df=pd.DataFrame(dict(reads=reads,muts=muts))
                     reads_df=reads_df.append(read_df,ignore_index=True)
 
-
+            #if there are no errors with a non-zero count, skip introducing errors to that amplicon
             if reads_df.empty:
                 amplicons.append(i.amplicon_filepath)
                 n_reads.append(i.n_reads)
@@ -200,40 +202,57 @@ for i in df_amplicons.itertuples():
                 #remove the , and turn tham into a list
                 reads_df["muts"]=reads_df.apply(lambda x: x.muts.split(",")[:-1] ,axis=1)
 
+                #create a dataframe of all errors of the amplicon. Contains pos, mut_index, errortype, length, alt
                 seq_pos_df=pd.DataFrame(dict(seq_pos=seq_pos,mut_indices=mut_indices))
                 seq_pos_df=seq_pos_df.merge(errors[["errortype","mut_indices","length","alt"]],on="mut_indices")
 
+                # amplicon's number of reads - total count of all error combination versions is the count of non-mutated (old) version.
                 amplicons.append(i.amplicon_filepath)
                 n_reads.append(i.n_reads - sum(reads_df["count"]))
 
+                #for all error combination versions of the amplicon
                 for idx,pcr_error in enumerate(reads_df.itertuples()):
+                    #if a specific combination has 0 reads, pass
                     if pcr_error.count==0:
                         pass
                     else:
+                        #create a final df that contains all the errors in that specific combination
                         final_df=seq_pos_df.loc[seq_pos_df["mut_indices"].isin([int(a) for a in pcr_error.muts]),]
                         final_df=final_df.sort_values('seq_pos')
-    
+                        
+                        #introduce those errors one by one.
                         new_seq=""
                         for indx,final in enumerate(final_df.itertuples()):
-                        
+                            
+                            #the part up to the first error is the same
                             if indx==0:
                                 new_seq=new_seq + seq[0:final.seq_pos]
+
+                            #if an error is substition or indel, take the part up to and excluding the error position
+                            #add alternative instead of the ref at error pos.
                             if final.errortype=="SUBS" or final.errortype=="INS":
                                 new_seq=new_seq+final.alt
+                                #then add the part up to the next error
                                 try:
                                     new_seq=new_seq+ seq[final.seq_pos+1:final_df.loc[indx+1,"seq_pos"]]
-                                except KeyError:
+                                #if it is the last error, add all the remaining sequence
+                                except KeyError: 
                                     new_seq=new_seq+ seq[final.seq_pos+1:]
+
                             elif final.errortype=="DEL":
+                                #if it is a deletion add the next section of the sequence but leave out the first n bases of it
                                 try:
                                     new_seq=new_seq+ seq[final.seq_pos+1:final_df.loc[indx+1,"seq_pos"]][final.length-1:]
                                 except KeyError:
                                     new_seq=new_seq+ seq[final.seq_pos+1:][final.length-1:]
-    
+
+                        #add the new amplicon to the list
                         new_path=i.amplicon_filepath[:-6] + "_p" +str(idx+1) + ".fasta"
                         amplicons.append(new_path)
                         n_reads.append(pcr_error.count)
     
+                        #write the fasta file of the new amplicon. 
+                        #Name all the PCR error combinations as _p1, _p2 and etc.
                         with open(f"../example/amplicons/{new_path}","w") as new_a:
                             new_a.write(f">{new_path[:-6]}\n")
                             new_a.write(new_seq + "\n\n")
