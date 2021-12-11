@@ -12,11 +12,12 @@ import logging
 
 class ArtIllumina:
 
-    def __init__(self, outpath, output_filename_prefix, read_length, seq_sys):
+    def __init__(self, outpath, output_filename_prefix, read_length, seq_sys, verbose):
         self.outpath = outpath
         self.output_filename_prefix = output_filename_prefix
         self.read_length = read_length
         self.seq_sys = seq_sys
+        self.verbose=verbose
 
     def run_once(self, infile, n_reads, out_prefix, rnd_seed):
 
@@ -37,9 +38,9 @@ class ArtIllumina:
 
         message_lines = op.stdout.decode("ASCII").split("\n")[-4:-2]
         warning = op.stderr.decode("ASCII")
-
-        for line in message_lines:
-            logging.info("art_illumina: " + line)
+        if self.verbose:
+            for line in message_lines:
+                logging.info("art_illumina: " + line)
         if warning != "Warning: your simulation will not output any ALN or SAM file with your parameter settings!\n":
             logging.warning(warning)
 
@@ -52,7 +53,10 @@ class ArtIllumina:
         for a, n in params:
             
             short_name = ".".join(basename(a).split(".")[:-1])
-            logging.info(f"Starting on file {short_name}.fasta with {n} reads")
+            
+            if self.verbose:
+                logging.info(f"Starting on file {short_name}.fasta with {n} reads")
+
             self.run_once(a, n, "tmp.sms."+short_name+".", np.random.randint(2 ** 63))
 
 
@@ -85,10 +89,10 @@ def shuffle_fastq_file(input_filename, output_filename, random_seed):
     os.system(f"paste -s -d '\t\t\t\n' {input_filename} | shuf --random-source={random_seed} | tr '\t&' '\n/' > {output_filename}")
 
 @contextmanager
-def art_illumina(outpath, output_filename_prefix, read_length, seq_sys):
+def art_illumina(outpath, output_filename_prefix, read_length, seq_sys, verbose):
     
     try:
-        yield ArtIllumina(outpath, output_filename_prefix, read_length, seq_sys)
+        yield ArtIllumina(outpath, output_filename_prefix, read_length, seq_sys, verbose)
     
     finally:
         logging.info("Exiting sars-cov-2 metagenome simulator - tidying up.")

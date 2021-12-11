@@ -11,6 +11,7 @@ import numpy as np
 from art_runner import art_illumina
 from create_amplicons import build_index, align_primers, write_amplicon
 from read_model import get_amplicon_reads_sampler
+from PCR_error import add_PCR_errors
 
 
 # All these caps variables are set once (by user inputs, with default values) but then never touched again.
@@ -31,6 +32,20 @@ AMPLICON_DISTRIBUTION = "DIRICHLET_1"
 AMPLICON_DISTRIBUTION_FILE = join(BASE_DIR, "artic_v3_amplicon_distribution.tsv")
 AMPLICON_PSEUDOCOUNTS = 10000
 
+##PCR-error related variables:
+WUHAN_REF = join(BASE_DIR, "ref","MN908947.3")
+PRIMER_BED = join(BASE_DIR,"articV3_no_alt.bed")
+SUBS_RATE = 0.01
+INS_RATE = 0.0001
+DEL_RATE = 0.0002
+
+DEL_LENGTH_GEOMETRIC_PARAMETER = 0.3
+INS_MAX_LENGTH = 10
+
+SUBS_VAF_DIRICLET_PARAMETER = [0.8,0.2]
+INS_VAF_DIRICLET_PARAMETER = [0.8,0.2]
+DEL_VAF_DIRICLET_PARAMETER = [0.8,0.2]
+
 def setup_parser():
     parser = argparse.ArgumentParser(description="Run SARS-CoV-2 metagenome simulation.")
     parser.add_argument("--genomes_file", metavar='', help="File containing all of the genomes that might be used", default=GENOMES_FILE)
@@ -38,7 +53,7 @@ def setup_parser():
     parser.add_argument("--amplicons_folder", "-am", metavar='', help="A temporary folder that will contain amplicons of all the genomes.", default=AMPLICONS_FOLDER)
     parser.add_argument("--indices_folder", "-i", metavar='', help="A temporary folder where bowtie2 indices are created and stored.", default=INDICES_FOLDER)
     parser.add_argument("--genome_abundances", "-ab", metavar='', help="TSV of genome abundances.", default=ABUNDANCES_FILE)
-    parser.add_argument("--primers_file", "-p", metavar='', help="Path to fastq file of primers. Default ARTIC V1 primers.", default=PRIMERS_FILE)
+    parser.add_argument("--primers_file", "-p", metavar='', help="Path to fastq file of primers. Default ARTIC V3 primers.", default=PRIMERS_FILE)
     parser.add_argument("--output_folder", "-o", metavar='', help="Folder where the output fastq files will be stored,", default=OUTPUT_FOLDER)
     parser.add_argument("--output_filename_prefix", "-x", metavar='', help="Name of the fastq files name1.fastq, name2.fastq", default=OUTPUT_FILENAME_PREFIX)
     parser.add_argument("--seqSys", metavar='', help="Name of the sequencing system, options to use are given by the art_illumina help text, and are:" + 
@@ -49,12 +64,21 @@ def setup_parser():
     parser.add_argument("--n_reads", "-n", metavar='', help="Approximate number of reads in fastq file (subject to sampling stochasticity).", default=N_READS)
     parser.add_argument("--read_length", "-l", metavar='', help="Length of reads taken from the sequencing machine.", default=READ_LENGTH)
     parser.add_argument("--seed", "-s", metavar='', help="Random seed", default=SEED)
-    parser.add_argument("--quiet", "-vb", help="Add this flag to supress verbose output." ,action='store_true')
+    parser.add_argument("--quiet", "-q", help="Add this flag to supress verbose output." ,action='store_true')
     parser.add_argument("--amplicon_distribution", metavar='', default=AMPLICON_DISTRIBUTION)
     parser.add_argument("--amplicon_distribution_file", metavar='', default=AMPLICON_DISTRIBUTION_FILE)
     parser.add_argument("--amplicon_pseudocounts","-c", metavar='', default=AMPLICON_PSEUDOCOUNTS)
-    parser.add_argument("--autoremove", action='store_true',help="Add this flag to delete temproray files after execution.")
-    
+    parser.add_argument("--autoremove", action='store_true',help="Delete temproray files after execution.")
+    parser.add_argument("--no_pcr_errors", action='store_true',help="Turn off PCR errors. The output will contain only sequencing errors. Other PCR-error related options will be ignored")
+    parser.add_argument("--primer_BED", metavar='', help="BED file of the primer set. Positions wrt Wuhan ref MN908947.3", default=PRIMER_BED)
+    parser.add_argument("--insertion_rate","-ins", metavar='', help="PCR insertion error rate. Default is DEFAULT", default=INS_RATE)
+    parser.add_argument("--deletion_rate","-del", metavar='', help="PCR deletion error rate. Default is DEFAULT", default=DEL_RATE)
+    parser.add_argument("--substitution_rate","-subs", metavar='', help="PCR substitution error rate. Default is DEFAULT", default=SUBS_RATE)
+    parser.add_argument("--deletion_length_p","-dl", metavar='', help="Geometric distribution parameter, p, for PCR deletion length. Default is DEFAULT", default=DEL_LENGTH_GEOMETRIC_PARAMETER)
+    parser.add_argument("--max_insertion_length","-il", metavar='', help="Maximum insertion length (uniform distribution boundry). Default is DEFAULT", default=INS_MAX_LENGTH)
+    parser.add_argument("--subs_VAF_alpha","-sv", metavar='', help="A comma seperated list of length 2. Dirichlet parameter for VAF that the PCR error will reach. Default is DEFAULT,DEFAULT", default=SUBS_VAF_DIRICLET_PARAMETER)
+    parser.add_argument("--del_VAF_alpha","-dv", metavar='', help="A comma seperated list of length 2. Dirichlet parameter for VAF that the PCR error will reach. Default is DEFAULT,DEFAULT", default=DEL_VAF_DIRICLET_PARAMETER)
+    parser.add_argument("--ins_VAF_alpha","-iv", metavar='', help="A comma seperated list of length 2. Dirichlet parameter for VAF that the PCR error will reach. Default is DEFAULT,DEFAULT", default=INS_VAF_DIRICLET_PARAMETER)
     return parser
 
 def load_command_line_args():
@@ -120,7 +144,38 @@ def load_command_line_args():
 
     global AUTOREMOVE
     AUTOREMOVE = args.autoremove
+
+    ##PCR error arguments
+
+    global NO_PCR_ERRORS
+    NO_PCR_ERRORS = args.no_pcr_errors
+
+    global PRIMER_BED 
+    PRIMER_BED =args.primer_BED
+
+    global SUBS_RATE
+    SUBS_RATE = args.substitution_rate
+
+    global INS_RATE
+    INS_RATE = args.insertion_rate
+
+    global DEL_RATE
+    DEL_RATE = args.deletion_rate
+
+    global DEL_LENGTH_GEOMETRIC_PARAMETER
+    DEL_LENGTH_GEOMETRIC_PARAMETER = args.deletion_length_p
+
+    global INS_MAX_LENGTH
+    INS_MAX_LENGTH = args.max_insertion_length
+
+    global SUBS_VAF_DIRICLET_PARAMETER
+    SUBS_VAF_DIRICLET_PARAMETER = args.subs_VAF_alpha
     
+    global INS_VAF_DIRICLET_PARAMETER
+    INS_VAF_DIRICLET_PARAMETER = args.ins_VAF_alpha
+
+    global DEL_VAF_DIRICLET_PARAMETER
+    DEL_VAF_DIRICLET_PARAMETER = args.del_VAF_alpha
 
 
 if __name__ == "__main__":
@@ -182,10 +237,6 @@ if __name__ == "__main__":
         write_amplicon(df, reference, genome_filename_short, AMPLICONS_FOLDER)
     
 
-        # STEP 3: Library Prep - PCR Amplification of Amplicons
-        # Ignore this for now - skip to next step!
-
-
         df_amplicons = pd.concat([df_amplicons, df])
 
 
@@ -223,16 +274,42 @@ if __name__ == "__main__":
         "hyperparameter",
         "amplicon_prob",
         "n_reads"]].to_csv(join(OUTPUT_FOLDER, f"{OUTPUT_FILENAME_PREFIX}_amplicon_abundances_summary.tsv"), sep="\t")
-
+    
+    df_amplicons.reset_index(drop=True,inplace=True)
+        
     if VERBOSE:
         logging.info(f"Total number of reads was {sum(df_amplicons['n_reads'])}, when {N_READS} was expected.")
-    
-    # STEP 4: Simulate Reads
-    amplicons = [join(AMPLICONS_FOLDER, a) for a in df_amplicons["amplicon_filepath"]]
-    n_reads = list(df_amplicons["n_reads"])
 
+
+    # STEP 3: Library Prep - PCR Amplification of Amplicons
+
+    if NO_PCR_ERRORS:    
+        amplicons = [join(AMPLICONS_FOLDER, a) for a in df_amplicons["amplicon_filepath"]]
+        n_reads = list(df_amplicons["n_reads"])
+    else:
+        if VERBOSE:
+            logging.info(f"Introducing PCR errors")
+
+        amplicons,n_reads,vcf_errordf=add_PCR_errors(df_amplicons,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,
+                                            SUBS_RATE,INS_RATE,DEL_RATE,DEL_LENGTH_GEOMETRIC_PARAMETER,INS_MAX_LENGTH,
+                                            SUBS_VAF_DIRICLET_PARAMETER,INS_VAF_DIRICLET_PARAMETER,DEL_VAF_DIRICLET_PARAMETER)
+        amplicons = [join(AMPLICONS_FOLDER, a) for a in amplicons]
+
+        with open(f"{OUTPUT_FOLDER}/{OUTPUT_FILENAME_PREFIX}_PCR_errors.vcf","w") as o:
+            o.write("##fileformat=VCFv4.3\n")
+            o.write("##reference=MN908947.3\n")
+            o.write('##contig=<ID=MN908947.3,length=29903>\n')
+            o.write('##INFO=<ID=VAF,Number=A,Type=Float,Description="Variant Allele Frequency">\n')
+            o.write('#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n')
+
+        vcf_errordf.to_csv(f"{OUTPUT_FOLDER}/{OUTPUT_FILENAME_PREFIX}_PCR_errors.vcf",
+                            mode="a",header=False,index=False,sep="\t", float_format='%.5f')
+        if VERBOSE:
+            logging.info(f'All aimed PCR errros are written to "{OUTPUT_FOLDER}/{OUTPUT_FILENAME_PREFIX}_PCR_errors.vcf"')
+
+    # STEP 4: Simulate Reads
     logging.info("Generating reads using art_illumina, cycling through all genomes and remaining amplicons.")
-    with art_illumina(OUTPUT_FOLDER, OUTPUT_FILENAME_PREFIX, READ_LENGTH, SEQ_SYS) as art:
+    with art_illumina(OUTPUT_FOLDER, OUTPUT_FILENAME_PREFIX, READ_LENGTH, SEQ_SYS,VERBOSE) as art:
         art.run(amplicons, n_reads)
 
     # STEP 5: Clean up all of the temp. directories
