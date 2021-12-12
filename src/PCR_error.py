@@ -22,7 +22,7 @@ def alts(ref,type,len=0):
         return ref+ "".join(insert)
 
 #find amplicons corresponding to a given position
-def amplicon_lookup(PRIMER_BED,position):
+def amplicon_lookup(PRIMER_BED,position,recurrence):
 
     df=pd.read_csv(PRIMER_BED,sep="\t", names=["Chr","Start","End","Amplicon","Pool","Strand"])
     df["Handedness"]=df.apply(lambda x: x.Amplicon.split("_")[-1],axis=1)
@@ -35,25 +35,46 @@ def amplicon_lookup(PRIMER_BED,position):
           on=["Amp_no"]
       )
     corresponding_amplicons=list(df.loc[(df["Start_x"]<=position)&(position<=df["End_y"]),"Amp_no"])
-    return corresponding_amplicons
 
-def add_PCR_errors(df_amplicons,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,SUBS_RATE,INS_RATE,DEL_RATE,DEL_LENGTH_GEOMETRIC_PARAMETER,INS_MAX_LENGTH,SUBS_VAF_DIRICLET_PARAMETER,INS_VAF_DIRICLET_PARAMETER,DEL_VAF_DIRICLET_PARAMETER):
+    if len(corresponding_amplicons)>0:
+        sample_amplicon=random.sample(corresponding_amplicons,k=1)
+    else:
+        sample_amplicon=corresponding_amplicons
+
+    if recurrence=="Recurrent":
+        return corresponding_amplicons
+    else:
+        return sample_amplicon
+
+def add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,U_SUBS_RATE,U_INS_RATE,U_DEL_RATE,
+                    R_SUBS_RATE,R_INS_RATE,R_DEL_RATE,DEL_LENGTH_GEOMETRIC_PARAMETER,INS_MAX_LENGTH,
+                    SUBS_VAF_DIRICLET_PARAMETER,INS_VAF_DIRICLET_PARAMETER,DEL_VAF_DIRICLET_PARAMETER):
+
+
     REF=SeqIO.read(f"{WUHAN_REF}.fasta", format="fasta")
     VAF=dict(SUBS=SUBS_VAF_DIRICLET_PARAMETER,INS=INS_VAF_DIRICLET_PARAMETER,DEL=DEL_VAF_DIRICLET_PARAMETER)
 
-    SUBS_COUNT=int(SUBS_RATE*len(REF.seq))
-    INS_COUNT=int(INS_RATE*len(REF.seq))
-    DEL_COUNT=int(DEL_RATE*len(REF.seq))
+    U_SUBS_COUNT=int(U_SUBS_RATE*len(REF.seq)) #unique
+    U_INS_COUNT=int(U_INS_RATE*len(REF.seq)) #unique
+    U_DEL_COUNT=int(U_DEL_RATE*len(REF.seq)) #unique
+    R_SUBS_COUNT=int(R_SUBS_RATE*len(REF.seq)) #recurrent
+    R_INS_COUNT=int(R_INS_RATE*len(REF.seq)) #recurrent
+    R_DEL_COUNT=int(R_DEL_RATE*len(REF.seq)) #recurrent
+    SUBS_COUNT=U_SUBS_COUNT+R_SUBS_COUNT
+    INS_COUNT=U_INS_COUNT+R_INS_COUNT
+    DEL_COUNT=U_DEL_COUNT+R_DEL_COUNT
 
     #create a dataframe of errors that we want to introduce
     errors=pd.DataFrame(dict(errortype=["SUBS"]*SUBS_COUNT + ["DEL"]*DEL_COUNT + ["INS"]*INS_COUNT ))
+    errors["recurrence"]=["Recurrent"]*R_SUBS_COUNT+["Unique"]*U_SUBS_COUNT+["Recurrent"]*R_DEL_COUNT+["Unique"]*U_DEL_COUNT+["Recurrent"]*R_INS_COUNT+["Unique"]*U_INS_COUNT
+    errors["genome"]=errors.apply(lambda x: random.choices(list(genome_abundances.keys()),weights=list(genome_abundances.values()) ,k=1) if x.recurrence=="Unique" else list(genome_abundances.keys()) , axis=1)
     errors["mut_indices"]=errors.index
     errors["length"]=[1]*SUBS_COUNT + list(np.random.geometric(p=DEL_LENGTH_GEOMETRIC_PARAMETER, size=DEL_COUNT)) + random.choices(list(range(1,INS_MAX_LENGTH+1)),k=INS_COUNT) 
     errors["pos"]= random.sample(list(range(len(REF.seq))),k=SUBS_COUNT+INS_COUNT+DEL_COUNT)
     errors["ref"]=errors.apply(lambda x: REF.seq[x.pos] if x.errortype!="DEL" else REF.seq[x.pos-1:x.pos+x.length], axis=1)
     errors["alt"]=errors.apply(lambda x: alts(x.ref,x.errortype,x.length), axis=1)
     errors["VAF"]=errors.apply(lambda x: np.random.dirichlet(VAF[x.errortype], size=None)[1],axis=1)
-    errors["amplicons"]=errors.apply(lambda x: amplicon_lookup(PRIMER_BED,x.pos),axis=1)
+    errors["amplicons"]=errors.apply(lambda x: amplicon_lookup(PRIMER_BED,x.pos,x.recurrence),axis=1)
     errors = errors.loc[errors['VAF']!=0,]
 
     #all amplicons to be mutated
@@ -67,7 +88,7 @@ def add_PCR_errors(df_amplicons,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,SUBS_RATE,
     for i in indices:
         indices2.extend(i)
 
-
+    #these 2 lists will be returned and later passed to art_illumina 
     amplicons=[]
     n_reads=[]
 
@@ -75,7 +96,7 @@ def add_PCR_errors(df_amplicons,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,SUBS_RATE,
 
         #Sometimes more than 1 error are introduced to the same amplicon.
         #Find all errors that will be introduced to that amplicon
-        mut_indices=[indices2[idx] for idx,a in enumerate(error_amplicons) if a==str(i.amplicon_number)]
+        mut_indices=[indices2[idx] for idx,a in enumerate(error_amplicons) if a==str(i.amplicon_number) and i.ref in errors.loc[indices2[idx],"genome"]]
 
         if mut_indices==[]:
 
@@ -86,7 +107,7 @@ def add_PCR_errors(df_amplicons,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,SUBS_RATE,
             # | and & are problematic for bash (subprocess), escape those.
             amp=i.amplicon_filepath.replace("&","\\&").replace("|","\\|")
 
-            #align the original amplicon to the reference becuase there could be real indels in the source genome.
+            #align the original amplicon to the reference because there could be real indels in the source genome.
             alignment = subprocess.run(
                 ["bowtie2", 
                 "-x", WUHAN_REF, 
@@ -156,7 +177,7 @@ def add_PCR_errors(df_amplicons,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,SUBS_RATE,
                     #if number of reads and/or VAF are small, this can be 0
                     if mut_reads == 0:
                         pass
-                    
+
                     else:
                         #Take that many samples from the total of the imaginary reads of that amplicon
                         reads=sorted(random.sample(range(i.n_reads),k=mut_reads))
@@ -238,7 +259,7 @@ def add_PCR_errors(df_amplicons,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,SUBS_RATE,
                             with open(f"{AMPLICONS_FOLDER}/{new_path}","w") as new_a:
                                 new_a.write(f">{new_path[:-6]}\n")
                                 new_a.write(new_seq + "\n\n")   
-    
+
     #this is for optional VCF output.
     errors['chr']="MN908947.3"
     errors['qual']="."
@@ -246,7 +267,7 @@ def add_PCR_errors(df_amplicons,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,SUBS_RATE,
     errors['id']="."
     errors['pos_0']=errors.apply(lambda x: x.pos if x.errortype!="DEL" else x.pos-1, axis=1)
     errors['pos_1']=errors.apply(lambda x: x.pos_0+1, axis=1)
-    errors['info']=errors.apply(lambda x: "VAF=%.5f" %round(x.VAF,5), axis=1)
+    errors['info']=errors.apply(lambda x: "VAF=%.5f" %round(x.VAF,5) + f";REC={x.recurrence[0]}", axis=1)
     errors.sort_values("pos",inplace=True)
     vcf_errordf=errors.loc[:,["chr","pos_1","id","ref","alt","qual","filter","info"]]
 

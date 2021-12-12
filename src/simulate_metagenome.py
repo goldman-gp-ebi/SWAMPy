@@ -35,9 +35,12 @@ AMPLICON_PSEUDOCOUNTS = 10000
 ##PCR-error related variables:
 WUHAN_REF = join(BASE_DIR, "ref","MN908947.3")
 PRIMER_BED = join(BASE_DIR,"articV3_no_alt.bed")
-SUBS_RATE = 0.01
-INS_RATE = 0.0001
-DEL_RATE = 0.0002
+U_SUBS_RATE = 0.01
+U_INS_RATE = 0.001
+U_DEL_RATE = 0.002
+R_SUBS_RATE = 0.01
+R_INS_RATE = 0.001
+R_DEL_RATE = 0.002
 
 DEL_LENGTH_GEOMETRIC_PARAMETER = 0.3
 INS_MAX_LENGTH = 10
@@ -71,11 +74,14 @@ def setup_parser():
     parser.add_argument("--autoremove", action='store_true',help="Delete temproray files after execution.")
     parser.add_argument("--no_pcr_errors", action='store_true',help="Turn off PCR errors. The output will contain only sequencing errors. Other PCR-error related options will be ignored")
     parser.add_argument("--primer_BED", metavar='', help="BED file of the primer set. Positions wrt Wuhan ref MN908947.3", default=PRIMER_BED)
-    parser.add_argument("--insertion_rate","-ins", metavar='', help="PCR insertion error rate. Default is DEFAULT", default=INS_RATE)
-    parser.add_argument("--deletion_rate","-del", metavar='', help="PCR deletion error rate. Default is DEFAULT", default=DEL_RATE)
-    parser.add_argument("--substitution_rate","-subs", metavar='', help="PCR substitution error rate. Default is DEFAULT", default=SUBS_RATE)
+    parser.add_argument("--unique_insertion_rate","-ins", metavar='', help="PCR insertion error rate. Unique to one source genome in the mixture Default is DEFAULT", default=U_INS_RATE)
+    parser.add_argument("--unique_deletion_rate","-del", metavar='', help="PCR deletion error rate. Unique to one source genome in the mixture Default is DEFAULT", default=U_DEL_RATE)
+    parser.add_argument("--unique_substitution_rate","-subs", metavar='', help="PCR substitution error rate. Unique to one source genome in the mixture Default is DEFAULT", default=U_SUBS_RATE)
+    parser.add_argument("--recurrent_insertion_rate","-rins", metavar='', help="PCR insertion error rate. Recurs across source genomes. Default is DEFAULT", default=R_INS_RATE)
+    parser.add_argument("--recurrent_deletion_rate","-rdel", metavar='', help="PCR deletion error rate. Recurs across source genomes. Default is DEFAULT", default=R_DEL_RATE)
+    parser.add_argument("--recurrent_substitution_rate","-rsubs", metavar='', help="PCR substitution error rate. Recurs across source genomes. Default is DEFAULT", default=R_SUBS_RATE)
     parser.add_argument("--deletion_length_p","-dl", metavar='', help="Geometric distribution parameter, p, for PCR deletion length. Default is DEFAULT", default=DEL_LENGTH_GEOMETRIC_PARAMETER)
-    parser.add_argument("--max_insertion_length","-il", metavar='', help="Maximum insertion length (uniform distribution boundry). Default is DEFAULT", default=INS_MAX_LENGTH)
+    parser.add_argument("--max_insertion_length","-il", metavar='', help="Maximum PCR insertion length (uniform distribution boundry). Default is DEFAULT", default=INS_MAX_LENGTH)
     parser.add_argument("--subs_VAF_alpha","-sv", metavar='', help="A comma seperated list of length 2. Dirichlet parameter for VAF that the PCR error will reach. Default is DEFAULT,DEFAULT", default=SUBS_VAF_DIRICLET_PARAMETER)
     parser.add_argument("--del_VAF_alpha","-dv", metavar='', help="A comma seperated list of length 2. Dirichlet parameter for VAF that the PCR error will reach. Default is DEFAULT,DEFAULT", default=DEL_VAF_DIRICLET_PARAMETER)
     parser.add_argument("--ins_VAF_alpha","-iv", metavar='', help="A comma seperated list of length 2. Dirichlet parameter for VAF that the PCR error will reach. Default is DEFAULT,DEFAULT", default=INS_VAF_DIRICLET_PARAMETER)
@@ -154,13 +160,22 @@ def load_command_line_args():
     PRIMER_BED =args.primer_BED
 
     global SUBS_RATE
-    SUBS_RATE = args.substitution_rate
+    U_SUBS_RATE = args.unique_substitution_rate
 
     global INS_RATE
-    INS_RATE = args.insertion_rate
+    U_INS_RATE = args.unique_insertion_rate
 
     global DEL_RATE
-    DEL_RATE = args.deletion_rate
+    U_DEL_RATE = args.unique_deletion_rate
+
+    global SUBS_RATE
+    R_SUBS_RATE = args.recurrent_substitution_rate
+
+    global INS_RATE
+    R_INS_RATE = args.recurrent_insertion_rate
+
+    global DEL_RATE
+    R_DEL_RATE = args.recurrent_deletion_rate
 
     global DEL_LENGTH_GEOMETRIC_PARAMETER
     DEL_LENGTH_GEOMETRIC_PARAMETER = args.deletion_length_p
@@ -202,7 +217,7 @@ if __name__ == "__main__":
 
         logging.info(f"Total of relative abundance values is {total}, not 1.")
         logging.info("Continuing, normalising total of genome abundances to 1.")
-        
+
         for k in genome_abundances.keys():
             genome_abundances[k] /= total
 
@@ -228,14 +243,14 @@ if __name__ == "__main__":
         if VERBOSE:
             logging.info(f"Working on genome {genome_counter} of {n_genomes}")
             logging.info(f"Using bowtie2 to align primers to genome {reference.description}")
-            
+
         build_index(genome_path, genome_filename_short, INDICES_FOLDER)
         df = align_primers(genome_path, genome_filename_short, INDICES_FOLDER, PRIMERS_FILE, False)        
         df["abundance"] = genome_abundances[df["ref"][0]]
-        
+
         # write the amplicon to a file
         write_amplicon(df, reference, genome_filename_short, AMPLICONS_FOLDER)
-    
+
 
         df_amplicons = pd.concat([df_amplicons, df])
 
@@ -249,7 +264,7 @@ if __name__ == "__main__":
                                 N_READS)
 
     df_amplicons["total_n_reads"] = N_READS
-    
+
     # for each amplicon, look up what the dirichlet hyperparameter should be (parameter \alpha)
     df_amplicons["hyperparameter"] = df_amplicons.apply(amplicon_hyperparameter_sampler, axis=1)
 
@@ -274,9 +289,9 @@ if __name__ == "__main__":
         "hyperparameter",
         "amplicon_prob",
         "n_reads"]].to_csv(join(OUTPUT_FOLDER, f"{OUTPUT_FILENAME_PREFIX}_amplicon_abundances_summary.tsv"), sep="\t")
-    
+
     df_amplicons.reset_index(drop=True,inplace=True)
-        
+
     if VERBOSE:
         logging.info(f"Total number of reads was {sum(df_amplicons['n_reads'])}, when {N_READS} was expected.")
 
@@ -290,9 +305,10 @@ if __name__ == "__main__":
         if VERBOSE:
             logging.info(f"Introducing PCR errors")
 
-        amplicons,n_reads,vcf_errordf=add_PCR_errors(df_amplicons,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,
-                                            SUBS_RATE,INS_RATE,DEL_RATE,DEL_LENGTH_GEOMETRIC_PARAMETER,INS_MAX_LENGTH,
+        amplicons,n_reads,vcf_errordf=add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,
+                                            U_SUBS_RATE,U_INS_RATE,U_DEL_RATE,R_SUBS_RATE,R_INS_RATE,R_DEL_RATE,DEL_LENGTH_GEOMETRIC_PARAMETER,INS_MAX_LENGTH,
                                             SUBS_VAF_DIRICLET_PARAMETER,INS_VAF_DIRICLET_PARAMETER,DEL_VAF_DIRICLET_PARAMETER)
+       
         amplicons = [join(AMPLICONS_FOLDER, a) for a in amplicons]
 
         with open(f"{OUTPUT_FOLDER}/{OUTPUT_FILENAME_PREFIX}_PCR_errors.vcf","w") as o:
@@ -300,6 +316,7 @@ if __name__ == "__main__":
             o.write("##reference=MN908947.3\n")
             o.write('##contig=<ID=MN908947.3,length=29903>\n')
             o.write('##INFO=<ID=VAF,Number=A,Type=Float,Description="Variant Allele Frequency">\n')
+            o.write('##INFO=<ID=REC,Number=A,Type=String,Description="Recurrence state across source genomes. R: recurrent; U: unique to genome">\n')
             o.write('#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n')
 
         vcf_errordf.to_csv(f"{OUTPUT_FOLDER}/{OUTPUT_FILENAME_PREFIX}_PCR_errors.vcf",
@@ -316,7 +333,7 @@ if __name__ == "__main__":
     for directory in [GENOMES_FOLDER, AMPLICONS_FOLDER, INDICES_FOLDER]:
         logging.info(f"Removing all files in {directory}")
         i = "y"
-        
+
         if not AUTOREMOVE:
             logging.info(f"Press y and enter if you are ok with all files in the directory {directory}" +
             " being deleted (use flag --autoremove to stop showing this message).")
