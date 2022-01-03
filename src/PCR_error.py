@@ -48,11 +48,13 @@ def amplicon_lookup(PRIMER_BED,position,recurrence):
 
 def add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,U_SUBS_RATE,U_INS_RATE,U_DEL_RATE,
                     R_SUBS_RATE,R_INS_RATE,R_DEL_RATE,DEL_LENGTH_GEOMETRIC_PARAMETER,INS_MAX_LENGTH,
-                    SUBS_VAF_DIRICLET_PARAMETER,INS_VAF_DIRICLET_PARAMETER,DEL_VAF_DIRICLET_PARAMETER):
+                    SUBS_VAF_DIRICLET_PARAMETER,INS_VAF_DIRICLET_PARAMETER,DEL_VAF_DIRICLET_PARAMETER,
+                    R_SUBS_VAF_DIRICLET_PARAMETER,R_INS_VAF_DIRICLET_PARAMETER,R_DEL_VAF_DIRICLET_PARAMETER):
 
 
     REF=SeqIO.read(f"{WUHAN_REF}.fasta", format="fasta")
     VAF=dict(SUBS=SUBS_VAF_DIRICLET_PARAMETER,INS=INS_VAF_DIRICLET_PARAMETER,DEL=DEL_VAF_DIRICLET_PARAMETER)
+    R_VAF=dict(SUBS=R_SUBS_VAF_DIRICLET_PARAMETER,INS=R_INS_VAF_DIRICLET_PARAMETER,DEL=R_DEL_VAF_DIRICLET_PARAMETER)
 
     U_SUBS_COUNT=int(U_SUBS_RATE*len(REF.seq)) #unique
     U_INS_COUNT=int(U_INS_RATE*len(REF.seq)) #unique
@@ -73,7 +75,7 @@ def add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS
     errors["pos"]= random.sample(list(range(len(REF.seq))),k=SUBS_COUNT+INS_COUNT+DEL_COUNT)
     errors["ref"]=errors.apply(lambda x: REF.seq[x.pos] if x.errortype!="DEL" else REF.seq[x.pos-1:x.pos+x.length], axis=1)
     errors["alt"]=errors.apply(lambda x: alts(x.ref,x.errortype,x.length), axis=1)
-    errors["VAF"]=errors.apply(lambda x: np.random.dirichlet(VAF[x.errortype], size=None)[1],axis=1)
+    errors["VAF"]=errors.apply(lambda x: np.random.dirichlet(VAF[x.errortype], size=None)[0] if x.recurrence=="Unique" else np.random.dirichlet(R_VAF[x.errortype], size=None)[0],axis=1)
     errors["amplicons"]=errors.apply(lambda x: amplicon_lookup(PRIMER_BED,x.pos,x.recurrence),axis=1)
     errors = errors.loc[errors['VAF']!=0,]
 

@@ -35,19 +35,23 @@ AMPLICON_PSEUDOCOUNTS = 10000
 ##PCR-error related variables:
 WUHAN_REF = join(BASE_DIR, "ref","MN908947.3")
 PRIMER_BED = join(BASE_DIR,"articV3_no_alt.bed")
-U_SUBS_RATE = 0.01
-U_INS_RATE = 0.001
-U_DEL_RATE = 0.002
-R_SUBS_RATE = 0.01
-R_INS_RATE = 0.001
-R_DEL_RATE = 0.002
+U_SUBS_RATE = 0.002485
+U_INS_RATE = 0.00002
+U_DEL_RATE = 0.000115
+R_SUBS_RATE = 0.003357
+R_INS_RATE = 0.00002
+R_DEL_RATE = 0
 
-DEL_LENGTH_GEOMETRIC_PARAMETER = 0.3
-INS_MAX_LENGTH = 10
+DEL_LENGTH_GEOMETRIC_PARAMETER = 0.69
+INS_MAX_LENGTH = 14
 
-SUBS_VAF_DIRICLET_PARAMETER = [0.8,0.2]
-INS_VAF_DIRICLET_PARAMETER = [0.8,0.2]
-DEL_VAF_DIRICLET_PARAMETER = [0.8,0.2]
+SUBS_VAF_DIRICLET_PARAMETER = "0.36,0.27"
+INS_VAF_DIRICLET_PARAMETER = "0.33,0.45"
+DEL_VAF_DIRICLET_PARAMETER = "0.59,0.42"
+
+R_SUBS_VAF_DIRICLET_PARAMETER = SUBS_VAF_DIRICLET_PARAMETER
+R_INS_VAF_DIRICLET_PARAMETER = INS_VAF_DIRICLET_PARAMETER
+R_DEL_VAF_DIRICLET_PARAMETER = DEL_VAF_DIRICLET_PARAMETER
 
 def setup_parser():
     parser = argparse.ArgumentParser(description="Run SARS-CoV-2 metagenome simulation.")
@@ -74,17 +78,20 @@ def setup_parser():
     parser.add_argument("--autoremove", action='store_true',help="Delete temproray files after execution.")
     parser.add_argument("--no_pcr_errors", action='store_true',help="Turn off PCR errors. The output will contain only sequencing errors. Other PCR-error related options will be ignored")
     parser.add_argument("--primer_BED", metavar='', help="BED file of the primer set. Positions wrt Wuhan ref MN908947.3", default=PRIMER_BED)
-    parser.add_argument("--unique_insertion_rate","-ins", metavar='', help="PCR insertion error rate. Unique to one source genome in the mixture Default is DEFAULT", default=U_INS_RATE)
-    parser.add_argument("--unique_deletion_rate","-del", metavar='', help="PCR deletion error rate. Unique to one source genome in the mixture Default is DEFAULT", default=U_DEL_RATE)
-    parser.add_argument("--unique_substitution_rate","-subs", metavar='', help="PCR substitution error rate. Unique to one source genome in the mixture Default is DEFAULT", default=U_SUBS_RATE)
-    parser.add_argument("--recurrent_insertion_rate","-rins", metavar='', help="PCR insertion error rate. Recurs across source genomes. Default is DEFAULT", default=R_INS_RATE)
-    parser.add_argument("--recurrent_deletion_rate","-rdel", metavar='', help="PCR deletion error rate. Recurs across source genomes. Default is DEFAULT", default=R_DEL_RATE)
-    parser.add_argument("--recurrent_substitution_rate","-rsubs", metavar='', help="PCR substitution error rate. Recurs across source genomes. Default is DEFAULT", default=R_SUBS_RATE)
-    parser.add_argument("--deletion_length_p","-dl", metavar='', help="Geometric distribution parameter, p, for PCR deletion length. Default is DEFAULT", default=DEL_LENGTH_GEOMETRIC_PARAMETER)
-    parser.add_argument("--max_insertion_length","-il", metavar='', help="Maximum PCR insertion length (uniform distribution boundry). Default is DEFAULT", default=INS_MAX_LENGTH)
-    parser.add_argument("--subs_VAF_alpha","-sv", metavar='', help="A comma seperated list of length 2. Dirichlet parameter for VAF that the PCR error will reach. Default is DEFAULT,DEFAULT", default=SUBS_VAF_DIRICLET_PARAMETER)
-    parser.add_argument("--del_VAF_alpha","-dv", metavar='', help="A comma seperated list of length 2. Dirichlet parameter for VAF that the PCR error will reach. Default is DEFAULT,DEFAULT", default=DEL_VAF_DIRICLET_PARAMETER)
-    parser.add_argument("--ins_VAF_alpha","-iv", metavar='', help="A comma seperated list of length 2. Dirichlet parameter for VAF that the PCR error will reach. Default is DEFAULT,DEFAULT", default=INS_VAF_DIRICLET_PARAMETER)
+    parser.add_argument("--unique_insertion_rate","-ins", metavar='', help="PCR insertion error rate. Unique to one source genome in the mixture Default is 0.00002", default=U_INS_RATE)
+    parser.add_argument("--unique_deletion_rate","-del", metavar='', help="PCR deletion error rate. Unique to one source genome in the mixture Default is 0.000115", default=U_DEL_RATE)
+    parser.add_argument("--unique_substitution_rate","-subs", metavar='', help="PCR substitution error rate. Unique to one source genome in the mixture Default is 0.002485", default=U_SUBS_RATE)
+    parser.add_argument("--recurrent_insertion_rate","-rins", metavar='', help="PCR insertion error rate. Recurs across source genomes. Default is 0.00002", default=R_INS_RATE)
+    parser.add_argument("--recurrent_deletion_rate","-rdel", metavar='', help="PCR deletion error rate. Recurs across source genomes. Default is 0", default=R_DEL_RATE)
+    parser.add_argument("--recurrent_substitution_rate","-rsubs", metavar='', help="PCR substitution error rate. Recurs across source genomes. Default is 0.003357", default=R_SUBS_RATE)
+    parser.add_argument("--deletion_length_p","-dl", metavar='', help="Geometric distribution parameter, p, for PCR deletion length. Default is 0.69", default=DEL_LENGTH_GEOMETRIC_PARAMETER)
+    parser.add_argument("--max_insertion_length","-il", metavar='', help="Maximum PCR insertion length in bases (uniform distribution boundry). Default is 14", default=INS_MAX_LENGTH)
+    parser.add_argument("--subs_VAF_alpha","-sv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the unique PCR error. Default is 0.36,0.27", default=SUBS_VAF_DIRICLET_PARAMETER)
+    parser.add_argument("--del_VAF_alpha","-dv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the unique PCR error. Default is 0.59,0.42", default=DEL_VAF_DIRICLET_PARAMETER)
+    parser.add_argument("--ins_VAF_alpha","-iv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the unique PCR error. Default is 0.33,0.45", default=INS_VAF_DIRICLET_PARAMETER)
+    parser.add_argument("--r_subs_VAF_alpha","-rsv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the recurrent PCR error. Default is equal to unique erros", default=SUBS_VAF_DIRICLET_PARAMETER)
+    parser.add_argument("--r_del_VAF_alpha","-rdv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the recurrent PCR error. Default is equal to unique erros", default=DEL_VAF_DIRICLET_PARAMETER)
+    parser.add_argument("--r_ins_VAF_alpha","-riv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the recurrent PCR error. Default is equal to unique erros", default=INS_VAF_DIRICLET_PARAMETER)
     return parser
 
 def load_command_line_args():
@@ -159,22 +166,22 @@ def load_command_line_args():
     global PRIMER_BED 
     PRIMER_BED =args.primer_BED
 
-    global SUBS_RATE
+    global U_SUBS_RATE
     U_SUBS_RATE = args.unique_substitution_rate
 
-    global INS_RATE
+    global U_INS_RATE
     U_INS_RATE = args.unique_insertion_rate
 
-    global DEL_RATE
+    global U_DEL_RATE
     U_DEL_RATE = args.unique_deletion_rate
 
-    global SUBS_RATE
+    global R_SUBS_RATE
     R_SUBS_RATE = args.recurrent_substitution_rate
 
-    global INS_RATE
+    global R_INS_RATE
     R_INS_RATE = args.recurrent_insertion_rate
 
-    global DEL_RATE
+    global R_DEL_RATE
     R_DEL_RATE = args.recurrent_deletion_rate
 
     global DEL_LENGTH_GEOMETRIC_PARAMETER
@@ -184,13 +191,28 @@ def load_command_line_args():
     INS_MAX_LENGTH = args.max_insertion_length
 
     global SUBS_VAF_DIRICLET_PARAMETER
-    SUBS_VAF_DIRICLET_PARAMETER = args.subs_VAF_alpha
+    SUBS_VAF_DIRICLET_PARAMETER = args.subs_VAF_alpha.split(",")
+    SUBS_VAF_DIRICLET_PARAMETER=[float(a) for a in SUBS_VAF_DIRICLET_PARAMETER]
     
     global INS_VAF_DIRICLET_PARAMETER
-    INS_VAF_DIRICLET_PARAMETER = args.ins_VAF_alpha
+    INS_VAF_DIRICLET_PARAMETER = args.ins_VAF_alpha.split(",")
+    INS_VAF_DIRICLET_PARAMETER=[float(a) for a in INS_VAF_DIRICLET_PARAMETER]
 
     global DEL_VAF_DIRICLET_PARAMETER
-    DEL_VAF_DIRICLET_PARAMETER = args.del_VAF_alpha
+    DEL_VAF_DIRICLET_PARAMETER = args.del_VAF_alpha.split(",")
+    DEL_VAF_DIRICLET_PARAMETER=[float(a) for a in DEL_VAF_DIRICLET_PARAMETER]
+
+    global R_SUBS_VAF_DIRICLET_PARAMETER
+    R_SUBS_VAF_DIRICLET_PARAMETER = args.r_subs_VAF_alpha.split(",")
+    R_SUBS_VAF_DIRICLET_PARAMETER=[float(a) for a in R_SUBS_VAF_DIRICLET_PARAMETER]
+    
+    global R_INS_VAF_DIRICLET_PARAMETER
+    R_INS_VAF_DIRICLET_PARAMETER = args.r_ins_VAF_alpha.split(",")
+    R_INS_VAF_DIRICLET_PARAMETER=[float(a) for a in R_INS_VAF_DIRICLET_PARAMETER]
+
+    global R_DEL_VAF_DIRICLET_PARAMETER
+    R_DEL_VAF_DIRICLET_PARAMETER = args.r_del_VAF_alpha.split(",")
+    R_DEL_VAF_DIRICLET_PARAMETER=[float(a) for a in R_DEL_VAF_DIRICLET_PARAMETER]
 
 
 if __name__ == "__main__":
@@ -307,7 +329,8 @@ if __name__ == "__main__":
 
         amplicons,n_reads,vcf_errordf=add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,
                                             U_SUBS_RATE,U_INS_RATE,U_DEL_RATE,R_SUBS_RATE,R_INS_RATE,R_DEL_RATE,DEL_LENGTH_GEOMETRIC_PARAMETER,INS_MAX_LENGTH,
-                                            SUBS_VAF_DIRICLET_PARAMETER,INS_VAF_DIRICLET_PARAMETER,DEL_VAF_DIRICLET_PARAMETER)
+                                            SUBS_VAF_DIRICLET_PARAMETER,INS_VAF_DIRICLET_PARAMETER,DEL_VAF_DIRICLET_PARAMETER,
+                                            R_SUBS_VAF_DIRICLET_PARAMETER,R_INS_VAF_DIRICLET_PARAMETER,R_DEL_VAF_DIRICLET_PARAMETER)
        
         amplicons = [join(AMPLICONS_FOLDER, a) for a in amplicons]
 
