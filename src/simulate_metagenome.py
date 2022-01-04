@@ -167,28 +167,28 @@ def load_command_line_args():
     PRIMER_BED =args.primer_BED
 
     global U_SUBS_RATE
-    U_SUBS_RATE = args.unique_substitution_rate
+    U_SUBS_RATE = float(args.unique_substitution_rate)
 
     global U_INS_RATE
-    U_INS_RATE = args.unique_insertion_rate
+    U_INS_RATE = float(args.unique_insertion_rate)
 
     global U_DEL_RATE
-    U_DEL_RATE = args.unique_deletion_rate
+    U_DEL_RATE = float(args.unique_deletion_rate)
 
     global R_SUBS_RATE
-    R_SUBS_RATE = args.recurrent_substitution_rate
+    R_SUBS_RATE = float(args.recurrent_substitution_rate)
 
     global R_INS_RATE
-    R_INS_RATE = args.recurrent_insertion_rate
+    R_INS_RATE = float(args.recurrent_insertion_rate)
 
     global R_DEL_RATE
-    R_DEL_RATE = args.recurrent_deletion_rate
+    R_DEL_RATE = float(args.recurrent_deletion_rate)
 
     global DEL_LENGTH_GEOMETRIC_PARAMETER
-    DEL_LENGTH_GEOMETRIC_PARAMETER = args.deletion_length_p
+    DEL_LENGTH_GEOMETRIC_PARAMETER = float(args.deletion_length_p)
 
     global INS_MAX_LENGTH
-    INS_MAX_LENGTH = args.max_insertion_length
+    INS_MAX_LENGTH = int(args.max_insertion_length)
 
     global SUBS_VAF_DIRICLET_PARAMETER
     SUBS_VAF_DIRICLET_PARAMETER = args.subs_VAF_alpha.split(",")
