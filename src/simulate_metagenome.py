@@ -7,6 +7,8 @@ from Bio import SeqIO
 import subprocess
 import pandas as pd
 import numpy as np
+import random
+import shutil
 
 from art_runner import art_illumina
 from create_amplicons import build_index, align_primers, write_amplicon
@@ -140,6 +142,7 @@ def load_command_line_args():
     global SEED
     SEED = args.seed
     np.random.seed(int(SEED))
+    random.seed(int(SEED))
     logging.info(f"Random seed: {SEED}")
 
     global VERBOSE
@@ -321,7 +324,7 @@ if __name__ == "__main__":
     # STEP 3: Library Prep - PCR Amplification of Amplicons
 
     if NO_PCR_ERRORS:    
-        amplicons = [join(AMPLICONS_FOLDER, a) for a in df_amplicons["amplicon_filepath"]]
+        amplicons = list(df_amplicons["amplicon_filepath"])
         n_reads = list(df_amplicons["n_reads"])
     else:
         if VERBOSE:
@@ -331,8 +334,7 @@ if __name__ == "__main__":
                                             U_SUBS_RATE,U_INS_RATE,U_DEL_RATE,R_SUBS_RATE,R_INS_RATE,R_DEL_RATE,DEL_LENGTH_GEOMETRIC_PARAMETER,INS_MAX_LENGTH,
                                             SUBS_VAF_DIRICLET_PARAMETER,INS_VAF_DIRICLET_PARAMETER,DEL_VAF_DIRICLET_PARAMETER,
                                             R_SUBS_VAF_DIRICLET_PARAMETER,R_INS_VAF_DIRICLET_PARAMETER,R_DEL_VAF_DIRICLET_PARAMETER)
-       
-        amplicons = [join(AMPLICONS_FOLDER, a) for a in amplicons]
+               
 
         with open(f"{OUTPUT_FOLDER}/{OUTPUT_FILENAME_PREFIX}_PCR_errors.vcf","w") as o:
             o.write("##fileformat=VCFv4.3\n")
@@ -346,11 +348,25 @@ if __name__ == "__main__":
                             mode="a",header=False,index=False,sep="\t", float_format='%.5f')
         if VERBOSE:
             logging.info(f'All aimed PCR errros are written to "{OUTPUT_FOLDER}/{OUTPUT_FILENAME_PREFIX}_PCR_errors.vcf"')
+    
+    amplicons = [join(AMPLICONS_FOLDER, a) for a in amplicons]
 
+    merged_n_reads=list(set(n_reads))
+    if merged_n_reads[0]==0:
+        merged_n_reads=merged_n_reads[1:]
+        
+    merged_amplicons=[join(AMPLICONS_FOLDER,f"merged_amplicon_rcount_{a}.fasta") for a in merged_n_reads]
+    
+    for readcount,m_amplicon in zip(merged_n_reads,merged_amplicons):
+        with open(m_amplicon, "w") as merged:
+            for amp in [amplicons[idx] for idx,r in enumerate(n_reads) if r==readcount]:
+                with open(amp, "r") as amp_file:
+                    shutil.copyfileobj(amp_file,merged)
+    
     # STEP 4: Simulate Reads
     logging.info("Generating reads using art_illumina, cycling through all genomes and remaining amplicons.")
     with art_illumina(OUTPUT_FOLDER, OUTPUT_FILENAME_PREFIX, READ_LENGTH, SEQ_SYS,VERBOSE) as art:
-        art.run(amplicons, n_reads)
+        art.run(merged_amplicons, merged_n_reads)
 
     # STEP 5: Clean up all of the temp. directories
     for directory in [GENOMES_FOLDER, AMPLICONS_FOLDER, INDICES_FOLDER]:
