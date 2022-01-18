@@ -56,12 +56,12 @@ def add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS
     VAF=dict(SUBS=SUBS_VAF_DIRICLET_PARAMETER,INS=INS_VAF_DIRICLET_PARAMETER,DEL=DEL_VAF_DIRICLET_PARAMETER)
     R_VAF=dict(SUBS=R_SUBS_VAF_DIRICLET_PARAMETER,INS=R_INS_VAF_DIRICLET_PARAMETER,DEL=R_DEL_VAF_DIRICLET_PARAMETER)
 
-    U_SUBS_COUNT=int(U_SUBS_RATE*len(REF.seq)) #unique
-    U_INS_COUNT=int(U_INS_RATE*len(REF.seq)) #unique
-    U_DEL_COUNT=int(U_DEL_RATE*len(REF.seq)) #unique
-    R_SUBS_COUNT=int(R_SUBS_RATE*len(REF.seq)) #recurrent
-    R_INS_COUNT=int(R_INS_RATE*len(REF.seq)) #recurrent
-    R_DEL_COUNT=int(R_DEL_RATE*len(REF.seq)) #recurrent
+    U_SUBS_COUNT=int(np.random.poisson(U_SUBS_RATE*len(REF.seq),1)) #unique
+    U_INS_COUNT=int(np.random.poisson(U_INS_RATE*len(REF.seq),1)) #unique
+    U_DEL_COUNT=int(np.random.poisson(U_DEL_RATE*len(REF.seq),1)) #unique
+    R_SUBS_COUNT=int(np.random.poisson(R_SUBS_RATE*len(REF.seq),1)) #recurrent
+    R_INS_COUNT=int(np.random.poisson(R_INS_RATE*len(REF.seq),1)) #recurrent
+    R_DEL_COUNT=int(np.random.poisson(R_DEL_RATE*len(REF.seq),1)) #recurrent
     SUBS_COUNT=U_SUBS_COUNT+R_SUBS_COUNT
     INS_COUNT=U_INS_COUNT+R_INS_COUNT
     DEL_COUNT=U_DEL_COUNT+R_DEL_COUNT
