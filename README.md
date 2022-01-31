@@ -2,7 +2,10 @@
 
 This project is intended to simulate Sars-CoV-2 metagenomes taken from wastewater samples. 
 Synthetic mixtures of amplicons are produced, based on proportions of viral genomes that are
-supplied by the user. 
+supplied by the user and a supported primer set of choice. 
+
+![image](https://user-images.githubusercontent.com/57137586/151800373-55048f9a-3f34-42f3-9f63-8f6190c5bde4.png)
+
 
 ## Installation
 
