@@ -214,27 +214,51 @@ def load_command_line_args():
 
     global SUBS_VAF_DIRICLET_PARAMETER
     SUBS_VAF_DIRICLET_PARAMETER = args.subs_VAF_alpha.split(",")
-    SUBS_VAF_DIRICLET_PARAMETER=[float(a) for a in SUBS_VAF_DIRICLET_PARAMETER]
+    if len(SUBS_VAF_DIRICLET_PARAMETER)!=2:
+        logging.error(f"subs_VAF_alpha argument must be a list of 2 values seperated by comma. Example: 0.5,0.4. You entered {args.subs_VAF_alpha} ")
+        exit(1)
+    else:
+        SUBS_VAF_DIRICLET_PARAMETER=[float(a) for a in SUBS_VAF_DIRICLET_PARAMETER]
     
     global INS_VAF_DIRICLET_PARAMETER
     INS_VAF_DIRICLET_PARAMETER = args.ins_VAF_alpha.split(",")
-    INS_VAF_DIRICLET_PARAMETER=[float(a) for a in INS_VAF_DIRICLET_PARAMETER]
+    if len(INS_VAF_DIRICLET_PARAMETER)!=2:
+        logging.error(f"ins_VAF_alpha argument must be a list of 2 values seperated by comma. Example: 0.5,0.4. You entered {args.ins_VAF_alpha} ")
+        exit(1)
+    else:
+        INS_VAF_DIRICLET_PARAMETER=[float(a) for a in INS_VAF_DIRICLET_PARAMETER]
 
     global DEL_VAF_DIRICLET_PARAMETER
     DEL_VAF_DIRICLET_PARAMETER = args.del_VAF_alpha.split(",")
-    DEL_VAF_DIRICLET_PARAMETER=[float(a) for a in DEL_VAF_DIRICLET_PARAMETER]
+    if len(DEL_VAF_DIRICLET_PARAMETER)!=2:
+        logging.error(f"del_VAF_alpha argument must be a list of 2 values seperated by comma. Example: 0.5,0.4. You entered {args.del_VAF_alpha} ")
+        exit(1)
+    else:
+        DEL_VAF_DIRICLET_PARAMETER=[float(a) for a in DEL_VAF_DIRICLET_PARAMETER]
 
     global R_SUBS_VAF_DIRICLET_PARAMETER
     R_SUBS_VAF_DIRICLET_PARAMETER = args.r_subs_VAF_alpha.split(",")
-    R_SUBS_VAF_DIRICLET_PARAMETER=[float(a) for a in R_SUBS_VAF_DIRICLET_PARAMETER]
+    if len(R_SUBS_VAF_DIRICLET_PARAMETER)!=2:
+        logging.error(f"r_subs_VAF_alpha argument must be a list of 2 values seperated by comma. Example: 0.5,0.4. You entered {args.r_subs_VAF_alpha} ")
+        exit(1)
+    else:
+        R_SUBS_VAF_DIRICLET_PARAMETER=[float(a) for a in R_SUBS_VAF_DIRICLET_PARAMETER]
     
     global R_INS_VAF_DIRICLET_PARAMETER
     R_INS_VAF_DIRICLET_PARAMETER = args.r_ins_VAF_alpha.split(",")
-    R_INS_VAF_DIRICLET_PARAMETER=[float(a) for a in R_INS_VAF_DIRICLET_PARAMETER]
+    if len(R_INS_VAF_DIRICLET_PARAMETER)!=2:
+        logging.error(f"r_ins_VAF_alpha argument must be a list of 2 values seperated by comma. Example: 0.5,0.4. You entered {args.r_ins_VAF_alpha} ")
+        exit(1)
+    else:
+        R_INS_VAF_DIRICLET_PARAMETER=[float(a) for a in R_INS_VAF_DIRICLET_PARAMETER]
 
     global R_DEL_VAF_DIRICLET_PARAMETER
     R_DEL_VAF_DIRICLET_PARAMETER = args.r_del_VAF_alpha.split(",")
-    R_DEL_VAF_DIRICLET_PARAMETER=[float(a) for a in R_DEL_VAF_DIRICLET_PARAMETER]
+    if len(R_DEL_VAF_DIRICLET_PARAMETER)!=2:
+        logging.error(f"r_del_VAF_alpha argument must be a list of 2 values seperated by comma. Example: 0.5,0.4. You entered {args.r_del_VAF_alpha} ")
+        exit(1)
+    else:
+        R_DEL_VAF_DIRICLET_PARAMETER=[float(a) for a in R_DEL_VAF_DIRICLET_PARAMETER]
 
 
 if __name__ == "__main__":
@@ -354,19 +378,25 @@ if __name__ == "__main__":
                                             SUBS_VAF_DIRICLET_PARAMETER,INS_VAF_DIRICLET_PARAMETER,DEL_VAF_DIRICLET_PARAMETER,
                                             R_SUBS_VAF_DIRICLET_PARAMETER,R_INS_VAF_DIRICLET_PARAMETER,R_DEL_VAF_DIRICLET_PARAMETER)
                
+        if amplicons=="No":
+            if VERBOSE:
+                logging.info(f"No PCR error was introduced! Possible reason: too low error rates.")
+            
+            amplicons = list(df_amplicons["amplicon_filepath"])
+            n_reads = list(df_amplicons["n_reads"])
+        else:
+            with open(f"{OUTPUT_FOLDER}/{OUTPUT_FILENAME_PREFIX}_PCR_errors.vcf","w") as o:
+                o.write("##fileformat=VCFv4.3\n")
+                o.write("##reference=MN908947.3\n")
+                o.write('##contig=<ID=MN908947.3,length=29903>\n')
+                o.write('##INFO=<ID=VAF,Number=A,Type=Float,Description="Variant Allele Frequency">\n')
+                o.write('##INFO=<ID=REC,Number=A,Type=String,Description="Recurrence state across source genomes. R: recurrent; U: unique to genome">\n')
+                o.write('#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n')
 
-        with open(f"{OUTPUT_FOLDER}/{OUTPUT_FILENAME_PREFIX}_PCR_errors.vcf","w") as o:
-            o.write("##fileformat=VCFv4.3\n")
-            o.write("##reference=MN908947.3\n")
-            o.write('##contig=<ID=MN908947.3,length=29903>\n')
-            o.write('##INFO=<ID=VAF,Number=A,Type=Float,Description="Variant Allele Frequency">\n')
-            o.write('##INFO=<ID=REC,Number=A,Type=String,Description="Recurrence state across source genomes. R: recurrent; U: unique to genome">\n')
-            o.write('#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n')
-
-        vcf_errordf.to_csv(f"{OUTPUT_FOLDER}/{OUTPUT_FILENAME_PREFIX}_PCR_errors.vcf",
-                            mode="a",header=False,index=False,sep="\t", float_format='%.5f')
-        if VERBOSE:
-            logging.info(f'All aimed PCR errros are written to "{OUTPUT_FOLDER}/{OUTPUT_FILENAME_PREFIX}_PCR_errors.vcf"')
+            vcf_errordf.to_csv(f"{OUTPUT_FOLDER}/{OUTPUT_FILENAME_PREFIX}_PCR_errors.vcf",
+                                mode="a",header=False,index=False,sep="\t", float_format='%.5f')
+            if VERBOSE:
+                logging.info(f'All aimed PCR errros are written to "{OUTPUT_FOLDER}/{OUTPUT_FILENAME_PREFIX}_PCR_errors.vcf"')
     
     amplicons = [join(AMPLICONS_FOLDER, a) for a in amplicons]
 

@@ -66,6 +66,9 @@ def add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS
     INS_COUNT=U_INS_COUNT+R_INS_COUNT
     DEL_COUNT=U_DEL_COUNT+R_DEL_COUNT
 
+    if SUBS_COUNT+INS_COUNT+DEL_COUNT==0:
+        return "No","PCR","ERROR"
+
     #create a dataframe of errors that we want to introduce
     errors=pd.DataFrame(dict(errortype=["SUBS"]*SUBS_COUNT + ["DEL"]*DEL_COUNT + ["INS"]*INS_COUNT ))
     errors["recurrence"]=["Recurrent"]*R_SUBS_COUNT+["Unique"]*U_SUBS_COUNT+["Recurrent"]*R_DEL_COUNT+["Unique"]*U_DEL_COUNT+["Recurrent"]*R_INS_COUNT+["Unique"]*U_INS_COUNT
