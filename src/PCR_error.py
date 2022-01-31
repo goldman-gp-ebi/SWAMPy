@@ -174,7 +174,7 @@ def add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS
 
 
                     #How many reads this specific error will have
-                    mut_reads=int(i.n_reads * errors.loc[mut_idx,"VAF"])
+                    mut_reads=np.random.binomial(i.n_reads , errors.loc[mut_idx,"VAF"])
 
                     #if number of reads and/or VAF are small, this can be 0
                     if mut_reads == 0:

@@ -23,7 +23,8 @@ GENOMES_FOLDER = join(BASE_DIR, "genomes")
 AMPLICONS_FOLDER = join(BASE_DIR, "amplicons")
 INDICES_FOLDER = join(BASE_DIR, "indices")
 ABUNDANCES_FILE = join(BASE_DIR, "abundances.tsv")
-PRIMERS_FILE = join(BASE_DIR, "artic_v3_primers_no_alts.fastq")
+PRIMER_SET="a1"
+PRIMER_SET_FOLDER=join(dirname(dirname(abspath(__file__))), "primer_sets")
 OUTPUT_FOLDER = os.getcwd()
 OUTPUT_FILENAME_PREFIX = "example"
 N_READS = 100000
@@ -31,12 +32,10 @@ READ_LENGTH = 250
 SEQ_SYS = "MSv3"
 SEED = np.random.randint(1000000000)
 AMPLICON_DISTRIBUTION = "DIRICHLET_1"
-AMPLICON_DISTRIBUTION_FILE = join(BASE_DIR, "artic_v3_amplicon_distribution.tsv")
 AMPLICON_PSEUDOCOUNTS = 10000
 
 ##PCR-error related variables:
-WUHAN_REF = join(BASE_DIR, "ref","MN908947.3")
-PRIMER_BED = join(BASE_DIR,"articV3_no_alt.bed")
+WUHAN_REF = join(dirname(dirname(abspath(__file__))), "ref","MN908947.3")
 U_SUBS_RATE = 0.002485
 U_INS_RATE = 0.00002
 U_DEL_RATE = 0.000115
@@ -62,7 +61,7 @@ def setup_parser():
     parser.add_argument("--amplicons_folder", "-am", metavar='', help="A temporary folder that will contain amplicons of all the genomes.", default=AMPLICONS_FOLDER)
     parser.add_argument("--indices_folder", "-i", metavar='', help="A temporary folder where bowtie2 indices are created and stored.", default=INDICES_FOLDER)
     parser.add_argument("--genome_abundances", "-ab", metavar='', help="TSV of genome abundances.", default=ABUNDANCES_FILE)
-    parser.add_argument("--primers_file", "-p", metavar='', help="Path to fastq file of primers. Default ARTIC V3 primers.", default=PRIMERS_FILE)
+    parser.add_argument("--primer_set", "-ps", metavar='', help="Primer set can be either a1 for Artic v1, a4 for Artic v4 and n2 for Nimagen v2, Default is a1.", default="a1",choices=["a1","a4","n2"])
     parser.add_argument("--output_folder", "-o", metavar='', help="Folder where the output fastq files will be stored,", default=OUTPUT_FOLDER)
     parser.add_argument("--output_filename_prefix", "-x", metavar='', help="Name of the fastq files name1.fastq, name2.fastq", default=OUTPUT_FILENAME_PREFIX)
     parser.add_argument("--seqSys", metavar='', help="Name of the sequencing system, options to use are given by the art_illumina help text, and are:" + 
@@ -74,12 +73,10 @@ def setup_parser():
     parser.add_argument("--read_length", "-l", metavar='', help="Length of reads taken from the sequencing machine.", default=READ_LENGTH)
     parser.add_argument("--seed", "-s", metavar='', help="Random seed", default=SEED)
     parser.add_argument("--quiet", "-q", help="Add this flag to supress verbose output." ,action='store_true')
-    parser.add_argument("--amplicon_distribution", metavar='', default=AMPLICON_DISTRIBUTION)
-    parser.add_argument("--amplicon_distribution_file", metavar='', default=AMPLICON_DISTRIBUTION_FILE)
+    parser.add_argument("--amplicon_distribution",help= "Default is DIRICHLET1", metavar='', default=AMPLICON_DISTRIBUTION)
     parser.add_argument("--amplicon_pseudocounts","-c", metavar='', default=AMPLICON_PSEUDOCOUNTS)
     parser.add_argument("--autoremove", action='store_true',help="Delete temproray files after execution.")
     parser.add_argument("--no_pcr_errors", action='store_true',help="Turn off PCR errors. The output will contain only sequencing errors. Other PCR-error related options will be ignored")
-    parser.add_argument("--primer_BED", metavar='', help="BED file of the primer set. Positions wrt Wuhan ref MN908947.3", default=PRIMER_BED)
     parser.add_argument("--unique_insertion_rate","-ins", metavar='', help="PCR insertion error rate. Unique to one source genome in the mixture Default is 0.00002", default=U_INS_RATE)
     parser.add_argument("--unique_deletion_rate","-del", metavar='', help="PCR deletion error rate. Unique to one source genome in the mixture Default is 0.000115", default=U_DEL_RATE)
     parser.add_argument("--unique_substitution_rate","-subs", metavar='', help="PCR substitution error rate. Unique to one source genome in the mixture Default is 0.002485", default=U_SUBS_RATE)
@@ -115,8 +112,6 @@ def load_command_line_args():
     global ABUNDANCES_FILE 
     ABUNDANCES_FILE = args.genome_abundances
 
-    global PRIMERS_FILE
-    PRIMERS_FILE = args.primers_file
 
     global OUTPUT_FOLDER
     OUTPUT_FOLDER = args.output_folder
@@ -131,6 +126,20 @@ def load_command_line_args():
             logging.StreamHandler()
         ]
     )
+
+    global PRIMER_SET
+    PRIMER_SET=args.primer_set
+
+    global PRIMERS_FILE
+    if PRIMER_SET=="a1":
+        PRIMERS_FILE = join(PRIMER_SET_FOLDER,"artic_v3_primers_no_alts.fastq")
+        logging.info(f"Primer set: Artic v1")
+    elif PRIMER_SET=="a4":
+        PRIMERS_FILE = join(PRIMER_SET_FOLDER,"artic_v4_primers.fastq")
+        logging.info(f"Primer set: Artic v4")
+    elif PRIMER_SET=="n2":
+        PRIMERS_FILE = join(PRIMER_SET_FOLDER,"nimagen_v2_primers.fastq")
+        logging.info(f"Primer set: Nimagen v2")
 
     global N_READS
     N_READS = int(args.n_reads)
@@ -152,8 +161,13 @@ def load_command_line_args():
     AMPLICON_DISTRIBUTION = args.amplicon_distribution
 
     global AMPLICON_DISTRIBUTION_FILE
-    AMPLICON_DISTRIBUTION_FILE = args.amplicon_distribution_file
-    
+    if PRIMER_SET=="a1":
+        AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "artic_v3_amplicon_distribution.tsv")
+    elif PRIMER_SET=="a4":
+        AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "artic_v4_amplicon_distribution.tsv")
+    elif PRIMER_SET=="n2":
+        AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "nimagen_v2_amplicon_distribution.tsv")
+
     global AMPLICON_PSEUDOCOUNTS
     AMPLICON_PSEUDOCOUNTS = int(args.amplicon_pseudocounts)
     logging.info(f"Amplicon pseudocounts/ i.e. quality parameter: {AMPLICON_PSEUDOCOUNTS}")
@@ -167,7 +181,12 @@ def load_command_line_args():
     NO_PCR_ERRORS = args.no_pcr_errors
 
     global PRIMER_BED 
-    PRIMER_BED =args.primer_BED
+    if PRIMER_SET=="a1":
+        PRIMER_BED = join(PRIMER_SET_FOLDER,"articV3_no_alt.bed")
+    elif PRIMER_SET=="a4":
+        PRIMER_BED = join(PRIMER_SET_FOLDER,"articV4.bed")
+    elif PRIMER_SET=="n2":
+        PRIMER_BED = join(PRIMER_SET_FOLDER,"nimagenV2.bed")
 
     global U_SUBS_RATE
     U_SUBS_RATE = float(args.unique_substitution_rate)
@@ -350,6 +369,8 @@ if __name__ == "__main__":
             logging.info(f'All aimed PCR errros are written to "{OUTPUT_FOLDER}/{OUTPUT_FILENAME_PREFIX}_PCR_errors.vcf"')
     
     amplicons = [join(AMPLICONS_FOLDER, a) for a in amplicons]
+
+    #merge art_illumina runs which have the same read count to optimize
 
     merged_n_reads=list(set(n_reads))
     if merged_n_reads[0]==0:
