@@ -9,12 +9,12 @@ This project is intended to simulate Sars-CoV-2 metagenomes taken from wastewate
 
 ## Installation
 
-1. Clone this repository and install the python dependencies `pandas` and `biopython`. 
+1. Clone this repository. 
 
 ```
 git clone https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator.git
 ```
-2. Install dependencies.
+2. Install dependencies `pandas` and `biopython`.
 You need to ensure `bowtie2` and `art_illumina` are available from your command line (i.e. both of the binaries of these tools are available from your `$PATH` environment variable). 
 
 The simplest way to do this on a Debian-based system, with python and pip already installed, is below: 
@@ -94,6 +94,11 @@ python simulate_metagenome.py \
 ```
 example1.fastq and example2.fastq should appear in simulation_output folder, as well as example_amplicon_abundances_summary.tsv, example.log and example_PCR_erros.vcf While running, some tmp files might appear in your working directory, but they will get cleaned up when the program terminates (even if it exits with an error).
 
+## Output files:
+- example_R1.fastq & example_R2.fastq: Simulated reads.
+- example_amplicon_abundances_summary.tsv: a table summarising the amplicons.
+- example_PCR_erros.vcf: All the intended high-frequency errors. Observed VAFs may be different from those in the VCF file due to randomness and recurrence.
+- example.log: A log file
 
 ## What these CLI arguments mean:
 
@@ -118,23 +123,6 @@ Here c is a scalar, the amplicon_pseudocounts number, and \alpha is a vector, sc
 of taking these draws may be possible, so this method is called 'dirichlet_1'. 
 
 - Alt primers are only really relevant to **Artic v3**. Artic v3 has extra primers which are tagged as ALT - these are 'alternative' primer ends for certain amplicons where the original amplicons were dropping out a lot. I believe that these 'alt' primers are added to the primer pool along with the original primers. Therefore for these amplicons (where alt primers exist), there are a total of 4 possible versions of the amplicon that could be made, depending on whether the left/right end was used with the alt primer or not. In the original version of this code, we would only simulate 2 of these possibilities - cases where both ends used the original primer and cases where both ends used the alt primer. However since then, because Artic v4 (which we assume will end up superseding artic v3) was released, and has no alts (and also most other sequencing protocols have no alts either) we decided to ignore alt primers altogether, and our version of artic does not include any simulation of alt primers. If you want this feature please contact us
-
-## TODOs
-
-- Deal with alts - produce all combinations of alts and at a relatively lower proportion (1/2^n)
-
-- Tune bowtie2 so that amplicon dropout occurs in line with experiment
-
-- Tune bowtie2 to allow ACGT -> N substitutions in primer sites, at the moment only single N insertions are allowed
-
-- What to do with genome ends (amplicon 1 and 98)? ATM they are dropped fairly consistantly because the leftmost and rightmost primer sites don't exist on most genomes that we look at except for the Wuhan reference. 
-
-- Simulate other PCR products (how? Chimeras -> Simera + Point mutations -> with a script? /ignore Chimeras for now.)
-
-- Test the 'exact' amplicon distribution method (Nicola's method) make sure it works as intended - this is already implemented but needs testing. Additionally on this point, Nicola asked for multinomial sampling from each set of reads and also for the ability to read from a SAM or BAM file, this is currently not supported. 
-
-- Cruddiness parameter should be able to be different for each genome, and a place for that information is in the tsv file containing the
-genome abundances. If there's a command line value, use that for all the genomes, if there isn't then look in the genome abundances, otherwise use a default.  
 
 ## Aknowledgements
 
