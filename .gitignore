@@ -1,7 +1,7 @@
 data/
-example/amplicons/
-example/indices/
-example/genomes/
+example/temp/amplicons/*
+example/temp/indices/*
+example/temp/genomes/*
 example/genomes.fasta
 external/
 simulations_*/

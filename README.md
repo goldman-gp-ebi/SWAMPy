@@ -44,9 +44,9 @@ but since the sequences are from GISAID we have not uploaded these to github.
 
 cd src
 
-mkdir ../example/genomes
-mkdir ../example/amplicons
-mkdir ../example/indices
+mkdir -p ../example/temp/genomes
+mkdir ../example/temp/amplicons
+mkdir ../example/temp/indices
 mkdir ../simulation_output
 ```
 ### Run the example simulation.

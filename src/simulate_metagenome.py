@@ -19,9 +19,9 @@ from PCR_error import add_PCR_errors
 # All these caps variables are set once (by user inputs, with default values) but then never touched again.
 BASE_DIR = join(dirname(dirname(abspath(__file__))), "example")
 GENOMES_FILE = join(BASE_DIR, "genomes.fasta")
-GENOMES_FOLDER = join(BASE_DIR, "genomes")
-AMPLICONS_FOLDER = join(BASE_DIR, "amplicons")
-INDICES_FOLDER = join(BASE_DIR, "indices")
+GENOMES_FOLDER = join(BASE_DIR, "temp","genomes")
+AMPLICONS_FOLDER = join(BASE_DIR, "temp","amplicons")
+INDICES_FOLDER = join(BASE_DIR, "temp","indices")
 ABUNDANCES_FILE = join(BASE_DIR, "abundances.tsv")
 PRIMER_SET="a1"
 PRIMER_SET_FOLDER=join(dirname(dirname(abspath(__file__))), "primer_sets")
