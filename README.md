@@ -1,6 +1,6 @@
 # SWAMPy
 
-This project is intended to simulate SARS-CoV-2 metagenomes taken from wastewater samples. Synthetic mixtures of amplicons are produced, based on proportions of viral genomes that are supplied by the user and a supported primer set of choice. See [our method](https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator/wiki/SWAMPy-method) to learn about how it works.
+**SWAMPy** stands for **S**imulating SARS-CoV-2 **W**astewater **A**mplicon **M**etagenomes in **Py**thon. It is a software package for simulating SARS-CoV-2 metagenomes taken from wastewater samples. Synthetic mixtures of amplicons are produced, based on proportions of viral genomes that are supplied by the user and a supported primer set of choice. See [our method](https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator/wiki/SWAMPy-method) to learn about how it works.
 
 
 ![image](https://user-images.githubusercontent.com/57137586/151800373-55048f9a-3f34-42f3-9f63-8f6190c5bde4.png)
