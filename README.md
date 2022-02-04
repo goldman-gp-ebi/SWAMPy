@@ -53,7 +53,7 @@ This creates a synthetic metagenome from the fasta files in the example/genomes 
 ### Run the simulator with default parameters
 
 ```
-python simulate_metagenome.py 
+python simulate_metagenome.py --output_folder ../simulation_output --autoremove
 ```
 
 ### See the help page 
