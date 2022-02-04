@@ -1,9 +1,12 @@
 data/
-example/amplicons/
-example/indices/
+example/temp/amplicons/*
+example/temp/indices/*
+example/temp/genomes/*
 example/genomes.fasta
 external/
 simulations_*/
 __pycache__/
 *.ipynb_checkpoints
 .vscode/
+src/tmp*
+simulation_output*

@@ -23,7 +23,7 @@ def align_primers(genome_path, genome_filename_short, indices_folder, primers_fi
     alignment = StringIO(alignment.stdout.decode("UTF-8"))
     
     # read alignment data as a dataframe
-    df = pd.read_csv(alignment, sep="\t", skiprows=[0, 1, 2], header=None, error_bad_lines=False, warn_bad_lines=True, names=[i for i in range(19)])
+    df = pd.read_csv(alignment, sep="\t", skiprows=[0, 1, 2], header=None, names=[i for i in range(19)])
     df = pd.DataFrame(df[[0, 2, 3, 9]])
     df = df.rename(columns={0:"name", 2:"ref", 3:"start", 9: "seq"})
     
