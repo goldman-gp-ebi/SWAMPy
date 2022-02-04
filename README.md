@@ -129,3 +129,8 @@ of taking these draws may be possible, so this method is called 'dirichlet_1'.
 We are using [bowtie2](bowtie-bio.sourceforge.net/bowtie2/index.shtml), [ART](https://www.niehs.nih.gov/research/resources/software/biostatistics/art/index.cfm) and [biopython](https://biopython.org/), as well as other python packages (pandas and numpy)
 and are using a primer set coming from [ARTIC v1](https://artic.network/). 
 The genomes in the example are courtesy of [Twist Bioscience](https://www.twistbioscience.com/), these genomes are in turn copies of surveillance sequences from [COG UK](https://www.cogconsortium.uk/). 
+
+
+---
+associated repos:
+[Will's notes](https://github.com/goldman-gp-ebi/wastewater_Will-s_notes.git)
