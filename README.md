@@ -1,6 +1,6 @@
 # SWAMPy
 
-This project is intended to simulate Sars-CoV-2 metagenomes taken from wastewater samples. Synthetic mixtures of amplicons are produced, based on proportions of viral genomes that are supplied by the user and a supported primer set of choice. See [our method](https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator/wiki/SWAMPy-method) to learn about how it works.
+This project is intended to simulate SARS-CoV-2 metagenomes taken from wastewater samples. Synthetic mixtures of amplicons are produced, based on proportions of viral genomes that are supplied by the user and a supported primer set of choice. See [our method](https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator/wiki/SWAMPy-method) to learn about how it works.
 
 
 ![image](https://user-images.githubusercontent.com/57137586/151800373-55048f9a-3f34-42f3-9f63-8f6190c5bde4.png)
@@ -31,8 +31,7 @@ conda create -c bioconda -c anaconda -n SWAMPy biopython art bowtie2 pandas
 conda activate SWAMPy
 ```
 
-You will also need to place a multi-fasta 'genomes.fasta' file in the example folder - we can send this file to you
-but since the sequences are from GISAID we have not uploaded these to github. 
+You will also need to place a multi-fasta 'genomes.fasta' file in the example folder --- since many examples are from GISAID and have restrictive re-distribution terms (see e.g. editorial pieces from 2021 in [Nature](https://www.nature.com/articles/d41586-021-00305-7) and [Science](https://www.science.org/doi/10.1126/science.371.6534.1086)) we have not uploaded them to github. Contact us if this causes you problems. 
 
 ## Quickstart
 
@@ -46,7 +45,7 @@ mkdir ../example/temp/amplicons
 mkdir ../example/temp/indices
 mkdir ../simulation_output
 ```
-### Run the example simulation.
+### Run the example simulation
 
 This creates a synthetic metagenome from the fasta files in the example/genomes folder, using relative genome proportions from the example/abundances.tsv. The primers used are from the ARTIC protocol v1; compared to v3, the primers marked as 'alt' are removed. For details, please see the potential bugs section below.
 
@@ -92,17 +91,17 @@ python simulate_metagenome.py \
     --r_del_VAF_alpha 0.59,0.42 \
     --r_ins_VAF_alpha 0.33,0.45 
 ```
-example1.fastq and example2.fastq should appear in simulation_output folder, as well as example_amplicon_abundances_summary.tsv, example.log and example_PCR_erros.vcf While running, some tmp files might appear in your working directory, but they will get cleaned up when the program terminates (even if it exits with an error).
+example1.fastq and example2.fastq should appear in simulation_output folder, as well as example_amplicon_abundances_summary.tsv, example.log and example_PCR_erros.vcf. While running, some tmp files might appear in your working directory, but they will get cleaned up when the program terminates (even if it exits with an error).
 
 ## Output files:
-- example_R1.fastq & example_R2.fastq: Simulated reads.
+- example_R1.fastq & example_R2.fastq: simulated reads.
 - example_amplicon_abundances_summary.tsv: a table summarising the amplicons.
-- example_PCR_erros.vcf: All the intended high-frequency errors. Observed VAFs may be different from those in the VCF file due to randomness and recurrence.
-- example.log: A log file
+- example_PCR_erros.vcf: all the intended high-frequency errors. Observed VAFs may be different from those in the VCF file due to randomness and recurrence.
+- example.log: The log file.
 
 ## What these CLI arguments mean:
 
-See the [CLI arguments](https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator/wiki/CLI-arguments) page:
+See the [CLI arguments](https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator/wiki/CLI-arguments) page.
 
 ## Extra options and potential bugs
 
@@ -122,13 +121,13 @@ this is done using multiple Multinomial(N_genome, p) draws, where p is drawn onc
 Here c is a scalar, the amplicon_pseudocounts number, and \alpha is a vector, scaled to have length 1, goverened by the amplicon_distribution file. N_genome is the number of reads for each genome, this is taken from the genome_abundances file. In the future, slightly different methods
 of taking these draws may be possible, so this method is called 'dirichlet_1'. 
 
-- Alt primers are only really relevant to **Artic v3**. Artic v3 has extra primers which are tagged as ALT - these are 'alternative' primer ends for certain amplicons where the original amplicons were dropping out a lot. I believe that these 'alt' primers are added to the primer pool along with the original primers. Therefore for these amplicons (where alt primers exist), there are a total of 4 possible versions of the amplicon that could be made, depending on whether the left/right end was used with the alt primer or not. In the original version of this code, we would only simulate 2 of these possibilities - cases where both ends used the original primer and cases where both ends used the alt primer. However since then, because Artic v4 (which we assume will end up superseding artic v3) was released, and has no alts (and also most other sequencing protocols have no alts either) we decided to ignore alt primers altogether, and our version of artic does not include any simulation of alt primers. If you want this feature please contact us
+- Alt primers are only really relevant to **ARTIC v3**. ARTIC v3 has extra primers which are tagged as ALT - these are 'alternative' primer ends for certain amplicons where the original amplicons were dropping out a lot. These 'alt' primers are added to the primer pool along with the original primers. Therefore for these amplicons (where alt primers exist), there are a total of four possible versions of the amplicon that could be made, depending on whether the left/right end was used with the alt primer or not. In the original version of this code, we would only simulate two of these possibilities --- cases where both ends used the original primer and cases where both ends used the alt primer. However since then, because ARTIC v4 (which we assume will end up superceding ARTIC v3) was released, and has no alts (and also most other sequencing protocols have no alts either) we decided to ignore alt primers altogether, and our version of ARTIC does not include any simulation of alt primers. If you want this feature please contact us.
 
 ## Aknowledgements
 
-We are using [bowtie2](bowtie-bio.sourceforge.net/bowtie2/index.shtml), [ART](https://www.niehs.nih.gov/research/resources/software/biostatistics/art/index.cfm) and [biopython](https://biopython.org/), as well as other python packages (pandas and numpy)
+We are using [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml), [ART](https://www.niehs.nih.gov/research/resources/software/biostatistics/art/index.cfm) and [biopython](https://biopython.org/), as well as other python packages (pandas and numpy)
 and are using a primer set coming from [ARTIC v1](https://artic.network/). 
-The genomes in the example are courtesy of [Twist Bioscience](https://www.twistbioscience.com/), these genomes are in turn copies of surveillance sequences from [COG UK](https://www.cogconsortium.uk/). 
+The genomes in the example are courtesy of [Twist Bioscience](https://www.twistbioscience.com/); these genomes are in turn copies of surveillance sequences from [COG UK](https://www.cogconsortium.uk/). 
 
 
 ---
