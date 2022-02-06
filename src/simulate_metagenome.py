@@ -293,7 +293,7 @@ if __name__ == "__main__":
 
     # Split genome file into multiple separate files
     for genome in SeqIO.parse(GENOMES_FILE, format="fasta"):
-        filepath = genome.description.replace(" ", "&").replace("/", "&")
+        filepath = genome.description.replace(" ", "&").replace("/", "&").replace(",", "&")
         filepath += ".fasta"
         SeqIO.write(genome, join(GENOMES_FOLDER, filepath), format="fasta")
 
@@ -302,7 +302,7 @@ if __name__ == "__main__":
     genome_counter = 0
     for genome_path in genome_abundances:
         genome_counter += 1
-        genome_path = genome_path.replace(" ", "&").replace("/", "&") + ".fasta"
+        genome_path = genome_path.replace(" ", "&").replace("/", "&").replace(",", "&") + ".fasta"
         genome_path = join(GENOMES_FOLDER, genome_path)
         genome_filename_short = ".".join(basename(genome_path).split(".")[:-1])
         reference = SeqIO.read(genome_path, format="fasta")

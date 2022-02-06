@@ -1,6 +1,6 @@
 # SWAMPy
 
-**SWAMPy** stands for **S**imulating SARS-CoV-2 **W**astewater **A**mplicon **M**etagenomes in **Py**thon. It is a software package for simulating SARS-CoV-2 metagenomes taken from wastewater samples. Synthetic mixtures of amplicons are produced, based on proportions of viral genomes that are supplied by the user and a supported primer set of choice. See [our method](https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator/wiki/SWAMPy-method) to learn about how it works.
+This project is intended to simulate SARS-CoV-2 metagenomes taken from wastewater samples. Synthetic mixtures of amplicons are produced, based on proportions of viral genomes that are supplied by the user and a supported primer set of choice. See [our method](https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator/wiki/SWAMPy-method) to learn about how it works.
 
 
 ![image](https://user-images.githubusercontent.com/57137586/151800373-55048f9a-3f34-42f3-9f63-8f6190c5bde4.png)
@@ -63,10 +63,10 @@ python simulate_metagenome.py --help
 ### Run the same example simulation again with all the parameters explicitly defined, and with the random seed set. 
 ```
 python simulate_metagenome.py \
-    --genomes_file ../example/genomes.fasta \
-    --genomes_folder ../example/genomes \
-    --amplicons_folder ../example/amplicons \
-    --indices_folder ../example/indices \
+    --genomes_file ../example/genome.fasta \
+    --genomes_folder ../example/temp/genomes \
+    --amplicons_folder ../example/temp/amplicons \
+    --indices_folder ../example/temp/indices \
     --genome_abundances ../example/abundances.tsv \
     --primer_set a1 \
     --output_folder ../simulation_output \
@@ -111,7 +111,7 @@ Things to watch out for:
 This is because the leftmost primer 1 and rightmost primer 98 basically never match in a genome. 
 Also watch out for long runs of N's in the primer sites, if these are there then that amplicon will drop out. 
 
-- Special characters in the fasta genome ids could potentially cause a problem. In the code, the characters "/" and " " are dealt with,
+- Special characters in the fasta genome ids could potentially cause a problem. In the code, the characters "/", "," and " " are dealt with,
 but other whitespace characters or special characters such as "&" could cause a bug. 
 
 - Note that the reads in the fastq files are both shuffled by a randomly chosen permutation. 
