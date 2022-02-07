@@ -38,7 +38,7 @@ You will also need to place a multi-fasta 'genomes.fasta' file in the example fo
 ```
 # You only need to make these directories once.
 
-cd src
+cd sars-cov-2-metagenomic-simulator/src
 
 mkdir -p ../example/temp/genomes
 mkdir ../example/temp/amplicons
