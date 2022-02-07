@@ -268,6 +268,16 @@ if __name__ == "__main__":
 
     # STEP 1: Simulate Viral Population
 
+    # Change spaces with "_" in genomes fasta file.
+    
+    os.system(f"sed 's/ /_/g' {GENOMES_FILE} > {join(GENOMES_FOLDER,basename(GENOMES_FILE))}")
+    GENOMES_FILE=join(GENOMES_FOLDER,basename(GENOMES_FILE))
+    os.system(f"sed 's/ /_/g' {ABUNDANCES_FILE} > {join(GENOMES_FOLDER,basename(ABUNDANCES_FILE))}")
+    ABUNDANCES_FILE=join(GENOMES_FOLDER,basename(ABUNDANCES_FILE))
+
+    if VERBOSE:
+        logging.info("Spaces in the genomes and abundances files are processed as '_' characters if exist")
+
     # Read genome abundances csv file
     genome_abundances = {}
     df_amplicons = pd.DataFrame()
@@ -302,7 +312,7 @@ if __name__ == "__main__":
     genome_counter = 0
     for genome_path in genome_abundances:
         genome_counter += 1
-        genome_path = genome_path.replace(" ", "&").replace("/", "&").replace(",", "&") + ".fasta"
+        genome_path = genome_path.replace(" ", "_").replace("/", "&").replace(",", "&") + ".fasta"
         genome_path = join(GENOMES_FOLDER, genome_path)
         genome_filename_short = ".".join(basename(genome_path).split(".")[:-1])
         reference = SeqIO.read(genome_path, format="fasta")
