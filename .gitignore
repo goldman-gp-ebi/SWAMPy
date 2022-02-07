@@ -2,7 +2,6 @@ data/
 example/temp/amplicons/*
 example/temp/indices/*
 example/temp/genomes/*
-example/genomes.fasta
 external/
 simulations_*/
 __pycache__/
