@@ -13,21 +13,23 @@ This project is intended to simulate SARS-CoV-2 metagenomes taken from wastewate
 
 ```
 git clone https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator.git
+
+cd sars-cov-2-metagenomic-simulator
 ```
 2. Install dependencies `pandas` and `biopython`.
-You need to ensure `bowtie2` and `art_illumina` are available from your command line (i.e. both of the binaries of these tools are available from your `$PATH` environment variable). The program also requires Python version >=3.6.
+You need to ensure `bowtie2` and `art_illumina` are available from your command line (i.e. both of the binaries of these tools are available from your `$PATH` environment variable). The program also requires Python version 3.9.7.
 
-The simplest way to do this on a Debian-based system, with python and pip already installed, is below: 
+A way to do this on a Debian-based system, with Python 3.9.7 and pip already installed, is below: 
 
 ```
 pip install pandas, biopython
 sudo apt-get install art_illumina, bowtie2
 ```
 
-Or you can also use conda as follows to create a new environment with the dependencies:
+Or you can also use conda as follows to create a new environment with the dependencies and correct versions:
 
 ```
-conda create -c bioconda -c anaconda -n SWAMPy biopython art bowtie2 pandas 
+conda env create -f SWAMPy-env.yaml
 conda activate SWAMPy
 ```
 
@@ -38,7 +40,7 @@ You will also need to place a multi-fasta 'genomes.fasta' file in the example fo
 ```
 # You only need to make these directories once.
 
-cd sars-cov-2-metagenomic-simulator/src
+cd src
 
 mkdir -p ../example/temp/genomes
 mkdir ../example/temp/amplicons
@@ -53,7 +55,6 @@ This creates a synthetic metagenome from the fasta files in the example/genomes 
 
 ```
 python simulate_metagenome.py --genomes_file ../example/genomes.fasta --genome_abundances ../example/abundances.tsv --output_folder ../simulation_output --autoremove
-
 ```
 
 ### See the help page 
