@@ -33,9 +33,9 @@ conda env create -f SWAMPy-env.yaml
 conda activate SWAMPy
 ```
 
-You will also need to place a multi-fasta 'genomes.fasta' file in the example folder --- since many examples are from GISAID and have restrictive re-distribution terms (see e.g. editorial pieces from 2021 in [Nature](https://www.nature.com/articles/d41586-021-00305-7) and [Science](https://www.science.org/doi/10.1126/science.371.6534.1086)) we have not uploaded them to github. Contact us if this causes you problems. 
-
 ## Quickstart
+
+Example [input files](https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator/wiki/SWAMPy-method#1-read-input-files) i.e. genomes.fasta and abudances.tsv are already included in the example directory.
 
 ```
 # You only need to make these directories once.
