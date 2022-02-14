@@ -1,4 +1,5 @@
 import argparse
+from genericpath import exists
 from os.path import dirname, join, abspath, basename
 import os
 import glob
@@ -18,10 +19,8 @@ from PCR_error import add_PCR_errors
 
 # All these caps variables are set once (by user inputs, with default values) but then never touched again.
 BASE_DIR = join(dirname(dirname(abspath(__file__))), "example")
+TEMP_FOLDER= join(BASE_DIR, "temp")
 GENOMES_FILE = join(BASE_DIR, "genomes.fasta")
-GENOMES_FOLDER = join(BASE_DIR, "temp","genomes")
-AMPLICONS_FOLDER = join(BASE_DIR, "temp","amplicons")
-INDICES_FOLDER = join(BASE_DIR, "temp","indices")
 ABUNDANCES_FILE = join(BASE_DIR, "abundances.tsv")
 PRIMER_SET="a1"
 PRIMER_SET_FOLDER=join(dirname(dirname(abspath(__file__))), "primer_sets")
@@ -33,6 +32,7 @@ SEQ_SYS = "MSv3"
 SEED = np.random.randint(1000000000)
 AMPLICON_DISTRIBUTION = "DIRICHLET_1"
 AMPLICON_PSEUDOCOUNTS = 10000
+
 
 ##PCR-error related variables:
 WUHAN_REF = join(dirname(dirname(abspath(__file__))), "ref","MN908947.3")
@@ -57,12 +57,10 @@ R_DEL_VAF_DIRICLET_PARAMETER = DEL_VAF_DIRICLET_PARAMETER
 def setup_parser():
     parser = argparse.ArgumentParser(description="Run SARS-CoV-2 metagenome simulation.")
     parser.add_argument("--genomes_file", metavar='', help="File containing all of the genomes that might be used", default=GENOMES_FILE)
-    parser.add_argument("--genomes_folder", "-g", metavar='', help="A temporary folder containing fasta files of genomes used in the simulation.", default=GENOMES_FOLDER)
-    parser.add_argument("--amplicons_folder", "-am", metavar='', help="A temporary folder that will contain amplicons of all the genomes.", default=AMPLICONS_FOLDER)
-    parser.add_argument("--indices_folder", "-i", metavar='', help="A temporary folder where bowtie2 indices are created and stored.", default=INDICES_FOLDER)
+    parser.add_argument("--temp_folder", "-t", metavar='', help="A path for a temporary output folder to store intemediate files. Including FASTA files of genomes, amplicons, and their bowtie2 indices", default=TEMP_FOLDER)
     parser.add_argument("--genome_abundances", "-ab", metavar='', help="TSV of genome abundances.", default=ABUNDANCES_FILE)
     parser.add_argument("--primer_set", "-ps", metavar='', help="Primer set can be either a1 for Artic v1, a4 for Artic v4 and n2 for Nimagen v2, Default is a1.", default="a1",choices=["a1","a4","n2"])
-    parser.add_argument("--output_folder", "-o", metavar='', help="Folder where the output fastq files will be stored. Default is working directory", default=OUTPUT_FOLDER)
+    parser.add_argument("--output_folder", "-o", metavar='', help="A path for a folder where the output fastq files will be stored. Default is working directory", default=OUTPUT_FOLDER)
     parser.add_argument("--output_filename_prefix", "-x", metavar='', help="Name of the fastq files name1.fastq, name2.fastq", default=OUTPUT_FILENAME_PREFIX)
     parser.add_argument("--seqSys", metavar='', help="Name of the sequencing system, options to use are given by the art_illumina help text, and are:" + 
     """GA1 - GenomeAnalyzer I (36bp,44bp), GA2 - GenomeAnalyzer II (50bp, 75bp)
@@ -97,24 +95,40 @@ def load_command_line_args():
     parser = setup_parser()
     args = parser.parse_args()
 
-    global GENOMES_FILE
-    GENOMES_FILE = args.genomes_file
+    global TEMP_FOLDER
+    TEMP_FOLDER = args.temp_folder
+    if not os.path.exists(TEMP_FOLDER):
+        os.makedirs(TEMP_FOLDER,exist_ok=True)
 
     global GENOMES_FOLDER
-    GENOMES_FOLDER = args.genomes_folder
+    GENOMES_FOLDER = join(TEMP_FOLDER, "genomes")
+    if not os.path.exists(GENOMES_FOLDER):
+        os.makedirs(GENOMES_FOLDER,exist_ok=True)
+
+    global GENOMES_FILE
+    GENOMES_FILE = args.genomes_file
+    global GENOMES_FILE2
+    GENOMES_FILE2 =join(GENOMES_FOLDER,basename(GENOMES_FILE))
 
     global AMPLICONS_FOLDER
-    AMPLICONS_FOLDER = args.amplicons_folder
-
+    AMPLICONS_FOLDER = join(TEMP_FOLDER, "amplicons")
+    if not os.path.exists(AMPLICONS_FOLDER):
+        os.makedirs(AMPLICONS_FOLDER,exist_ok=True)
+    
     global INDICES_FOLDER
-    INDICES_FOLDER = args.indices_folder
+    INDICES_FOLDER = join(TEMP_FOLDER, "indices")
+    if not os.path.exists(INDICES_FOLDER):
+        os.mkdir(INDICES_FOLDER)
 
     global ABUNDANCES_FILE 
     ABUNDANCES_FILE = args.genome_abundances
-
+    global ABUNDANCES_FILE2
+    ABUNDANCES_FILE2=join(GENOMES_FOLDER,basename(ABUNDANCES_FILE))
 
     global OUTPUT_FOLDER
     OUTPUT_FOLDER = args.output_folder
+    if not os.path.exists(OUTPUT_FOLDER):
+        os.makedirs(OUTPUT_FOLDER,exist_ok=True)
 
     global OUTPUT_FILENAME_PREFIX
     OUTPUT_FILENAME_PREFIX = args.output_filename_prefix
@@ -266,23 +280,20 @@ if __name__ == "__main__":
     # STEP 0: Read command line arguments
     load_command_line_args()
 
-    # STEP 1: Simulate Viral Population
 
-    # Change spaces with "_" in genomes fasta file.
-    
-    os.system(f"sed 's/ /_/g' {GENOMES_FILE} > {join(GENOMES_FOLDER,basename(GENOMES_FILE))}")
-    GENOMES_FILE=join(GENOMES_FOLDER,basename(GENOMES_FILE))
-    os.system(f"sed 's/ /_/g' {ABUNDANCES_FILE} > {join(GENOMES_FOLDER,basename(ABUNDANCES_FILE))}")
-    ABUNDANCES_FILE=join(GENOMES_FOLDER,basename(ABUNDANCES_FILE))
-
+    # Change spaces with "_" in genomes fasta file and record as a different file.
+    os.system(f"sed 's/ /_/g' {GENOMES_FILE} > {GENOMES_FILE2}")
+    os.system(f"sed 's/ /_/g' {ABUNDANCES_FILE} > {ABUNDANCES_FILE2}")
     if VERBOSE:
         logging.info("Spaces in the genomes and abundances files are processed as '_' characters if exist")
+    
+    # STEP 1: Simulate Viral Population
 
     # Read genome abundances csv file
     genome_abundances = {}
     df_amplicons = pd.DataFrame()
 
-    with open(ABUNDANCES_FILE) as ab_file:
+    with open(ABUNDANCES_FILE2) as ab_file:
         for line in ab_file:
             name, relative_abundance = tuple(line.split("\t"))
             genome_abundances[name] = float(relative_abundance)
@@ -302,7 +313,7 @@ if __name__ == "__main__":
     n_genomes = len(genome_abundances)
 
     # Split genome file into multiple separate files
-    for genome in SeqIO.parse(GENOMES_FILE, format="fasta"):
+    for genome in SeqIO.parse(GENOMES_FILE2, format="fasta"):
         filepath = genome.description.replace(" ", "&").replace("/", "&").replace(",", "&")
         filepath += ".fasta"
         SeqIO.write(genome, join(GENOMES_FOLDER, filepath), format="fasta")

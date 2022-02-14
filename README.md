@@ -26,32 +26,30 @@ pip install pandas, biopython
 sudo apt-get install art_illumina, bowtie2
 ```
 
-Or you can also use conda as follows to create a new environment with the dependencies and correct versions:
+Or you can also use conda as follows to create a new environment with the dependencies and correct versions (RECOMMENDED):
 
 ```
 conda env create -f SWAMPy-env.yaml
 conda activate SWAMPy
 ```
 
+**MAC USERS** also need:
+```
+brew install coreutils
+```
+
 ## Quickstart
 
 Example [input files](https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator/wiki/SWAMPy-method#1-read-input-files) i.e. genomes.fasta and abudances.tsv are already included in the example directory.
 
-```
-# You only need to make these directories once.
-
-cd src
-
-mkdir -p ../example/temp/genomes
-mkdir ../example/temp/amplicons
-mkdir ../example/temp/indices
-mkdir ../simulation_output
-```
 ### Run the example simulation
 
 This creates a synthetic metagenome from the fasta files in the example/genomes folder, using relative genome proportions from the example/abundances.tsv. The primers used are from the ARTIC protocol v1; compared to v3, the primers marked as 'alt' are removed. For details, please see the potential bugs section below.
 
 ### Run the simulator with default parameters
+```
+cd src
+```
 
 ```
 python simulate_metagenome.py --genomes_file ../example/genomes.fasta --genome_abundances ../example/abundances.tsv --output_folder ../simulation_output --autoremove
@@ -66,9 +64,7 @@ python simulate_metagenome.py --help
 ```
 python simulate_metagenome.py \
     --genomes_file ../example/genome.fasta \
-    --genomes_folder ../example/temp/genomes \
-    --amplicons_folder ../example/temp/amplicons \
-    --indices_folder ../example/temp/indices \
+    --temp_folder ../example/temp/
     --genome_abundances ../example/abundances.tsv \
     --primer_set a1 \
     --output_folder ../simulation_output \
