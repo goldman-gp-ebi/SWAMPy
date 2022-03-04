@@ -52,7 +52,7 @@ cd src
 ```
 
 ```
-python simulate_metagenome.py --genomes_file ../example/genomes.fasta --genome_abundances ../example/abundances.tsv --output_folder ../simulation_output --autoremove
+python simulate_metagenome.py --genomes_file ../example/genomes.fasta --genome_abundances ../example/abundances.tsv --output_folder ../simulation_output --temp_folder ../example/temp/ --autoremove
 ```
 
 ### See the help page 
