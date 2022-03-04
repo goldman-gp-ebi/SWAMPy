@@ -437,7 +437,7 @@ if __name__ == "__main__":
     
     # STEP 4: Simulate Reads
     logging.info("Generating reads using art_illumina, cycling through all genomes and remaining amplicons.")
-    with art_illumina(OUTPUT_FOLDER, OUTPUT_FILENAME_PREFIX, READ_LENGTH, SEQ_SYS,VERBOSE) as art:
+    with art_illumina(OUTPUT_FOLDER, OUTPUT_FILENAME_PREFIX, READ_LENGTH, SEQ_SYS,VERBOSE,TEMP_FOLDER) as art:
         art.run(merged_amplicons, merged_n_reads)
 
     # STEP 5: Clean up all of the temp. directories
