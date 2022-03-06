@@ -105,6 +105,8 @@ See the [CLI arguments](https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic
 
 Things to watch out for:
 
+- If you want to run multiple instances of SWAMPy simultaneously, make sure to use a unique `--TEMP_FOLDER` for each run. Otherwise, they will interfere with each other. Submitting multiple SLURM or LSF jobs or using SWAMPy in a Snakemake rule are examples of situations where this warning may apply. 
+
 - First and last amplicons get dropped for basically every genome except the Wuhan reference.
 This is because the leftmost primer 1 and rightmost primer 98 basically never match in a genome. 
 Also watch out for long runs of N's in the primer sites, if these are there then that amplicon will drop out. 
