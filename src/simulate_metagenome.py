@@ -46,7 +46,7 @@ R_DEL_RATE = 0
 DEL_LENGTH_GEOMETRIC_PARAMETER = 0.69
 INS_MAX_LENGTH = 14
 
-SUBS_VAF_DIRICLET_PARAMETER = "0.36,0.27"
+SUBS_VAF_DIRICLET_PARAMETER = "0.29,1.89"
 INS_VAF_DIRICLET_PARAMETER = "0.33,0.45"
 DEL_VAF_DIRICLET_PARAMETER = "0.59,0.42"
 
@@ -83,7 +83,7 @@ def setup_parser():
     parser.add_argument("--recurrent_substitution_rate","-rsubs", metavar='', help="PCR substitution error rate. Recurs across source genomes. Default is 0.003357", default=R_SUBS_RATE)
     parser.add_argument("--deletion_length_p","-dl", metavar='', help="Geometric distribution parameter, p, for PCR deletion length. Default is 0.69", default=DEL_LENGTH_GEOMETRIC_PARAMETER)
     parser.add_argument("--max_insertion_length","-il", metavar='', help="Maximum PCR insertion length in bases (uniform distribution boundry). Default is 14", default=INS_MAX_LENGTH)
-    parser.add_argument("--subs_VAF_alpha","-sv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the unique PCR error. Default is 0.36,0.27", default=SUBS_VAF_DIRICLET_PARAMETER)
+    parser.add_argument("--subs_VAF_alpha","-sv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the unique PCR error. Default is 0.29,1.89", default=SUBS_VAF_DIRICLET_PARAMETER)
     parser.add_argument("--del_VAF_alpha","-dv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the unique PCR error. Default is 0.59,0.42", default=DEL_VAF_DIRICLET_PARAMETER)
     parser.add_argument("--ins_VAF_alpha","-iv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the unique PCR error. Default is 0.33,0.45", default=INS_VAF_DIRICLET_PARAMETER)
     parser.add_argument("--r_subs_VAF_alpha","-rsv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the recurrent PCR error. Default is equal to unique erros", default=SUBS_VAF_DIRICLET_PARAMETER)
