@@ -12,9 +12,9 @@ This project is intended to simulate SARS-CoV-2 metagenomes taken from wastewate
 1. Clone this repository. 
 
 ```
-git clone https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator.git
+git clone https://github.com/goldman-gp-ebi/SWAMPy.git
 
-cd sars-cov-2-metagenomic-simulator
+cd SWAMPy
 ```
 2. Install dependencies `pandas` and `biopython`.
 You need to ensure `bowtie2` and `art_illumina` are available from your command line (i.e. both of the binaries of these tools are available from your `$PATH` environment variable). The program also requires Python version 3.9.7.
@@ -40,7 +40,7 @@ brew install coreutils
 
 ## Quickstart
 
-Example [input files](https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator/wiki/SWAMPy-method#1-read-input-files) i.e. genomes.fasta and abudances.tsv are already included in the example directory.
+Example [input files](https://github.com/goldman-gp-ebi/SWAMPy/wiki/SWAMPy-method#1-read-input-files) i.e. genomes.fasta and abudances.tsv are already included in the example directory.
 
 ### Run the example simulation
 
@@ -99,7 +99,7 @@ example1.fastq and example2.fastq should appear in simulation_output folder, as 
 
 ## What these CLI arguments mean:
 
-See the [CLI arguments](https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator/wiki/CLI-arguments) page.
+See the [CLI arguments](https://github.com/goldman-gp-ebi/SWAMPy/wiki/CLI-arguments) page.
 
 ## Extra options and potential bugs
 
