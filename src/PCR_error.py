@@ -121,7 +121,14 @@ def add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS
             alignment = StringIO(alignment.stdout.decode("UTF-8"))
 
             # read alignment data as a dataframe
-            df = pd.read_csv(alignment, sep="\t", skiprows=[0, 1, 2], header=None, names=[i for i in range(19)])
+            df = pd.read_csv(
+                alignment,
+                sep="\t",
+                skiprows=[0, 1, 2],
+                header=None,
+                names=[i for i in range(10)], 
+                usecols=[i for i in range(10)]
+            )
             df = pd.DataFrame(df[[0,3,5,9]])
             df = df.rename(columns={0:"name", 3:"start", 5:"CIGAR", 9: "seq"})
 
@@ -193,7 +200,8 @@ def add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS
                         muts=[a+"," for a in muts]
 
                         read_df=pd.DataFrame(dict(reads=reads,muts=muts))
-                        reads_df=reads_df.append(read_df,ignore_index=True)
+                        #reads_df=reads_df.append(read_df,ignore_index=True)
+                        reads_df=pd.concat([reads_df, read_df], ignore_index=True)
 
                 #if there are no errors with a non-zero count, skip introducing errors to that amplicon
                 if reads_df.empty:

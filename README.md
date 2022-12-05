@@ -38,6 +38,28 @@ conda activate SWAMPy
 brew install coreutils
 ```
 
+**If you have a Mac with an M1 apple chip, the procedure is more annoying, sorry!**
+In this circumstance, bioconda doesn't seem to work. Instead, I found the following process 
+seemed to work instead (though not everything ended up inside a conda environment...):
+
+```
+conda env create -f SWAMPy-env.yaml
+# This should successfully install numpy, biopython, pandas, and gsl (2.7).
+# If not then download them using pip. 
+brew install coreutils
+brew install bowtie2
+# Install these two things system-wide(!).
+```
+
+Now you have to manually install [art](https://www.niehs.nih.gov/research/resources/software/biostatistics/art/index.cfm) from source. This turned out to work fine for me. 
+I just unzipped the tar.gz archive and ran
+
+```
+./configure && make
+```
+
+and then moved the binary into wherever my conda environment lives (`conda env list` printed the path to the folder, inside which is a `bin` directory for the binary). 
+
 ## Quickstart
 
 Example [input files](https://github.com/goldman-gp-ebi/SWAMPy/wiki/SWAMPy-method#1-read-input-files) i.e. genomes.fasta and abudances.tsv are already included in the example directory.

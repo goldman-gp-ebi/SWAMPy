@@ -9,3 +9,4 @@ __pycache__/
 .vscode/
 src/tmp*
 simulation_output*
+.DS_Store
