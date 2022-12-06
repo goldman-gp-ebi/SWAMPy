@@ -51,14 +51,14 @@ brew install bowtie2
 # Install these two things system-wide(!).
 ```
 
-Now you have to manually install [art](https://www.niehs.nih.gov/research/resources/software/biostatistics/art/index.cfm) from source. This turned out to work fine for me. 
-I just unzipped the tar.gz archive and ran
+Now you have to manually install [art](https://www.niehs.nih.gov/research/resources/software/biostatistics/art/index.cfm) from source. This turned out to work without any real trouble, at least for me. 
+I just downloaded  ART-src-MountRainier-2016.06.05-MacOS.tgz (this is the current latest version as of December 2022, and has been since 2016), unzipped the archive and ran
 
 ```
 ./configure && make
 ```
 
-and then moved the binary into wherever my conda environment lives (`conda env list` printed the path to the folder, inside which is a `bin` directory for the binary). 
+and then moved the `art_illumina` binary into wherever my conda environment lives (`conda env list` printed the path to the folder, inside which is a `bin` directory for the binary). 
 
 Optionally, you can run `alias swampy='python /path/to/SWAMPy/src/simulate_metagenome.py'` to use `swampy` as a command rather than `python simulate_metagenome.py`. 
 
