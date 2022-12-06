@@ -60,6 +60,8 @@ I just unzipped the tar.gz archive and ran
 
 and then moved the binary into wherever my conda environment lives (`conda env list` printed the path to the folder, inside which is a `bin` directory for the binary). 
 
+Optionally, you can run `alias swampy='python /path/to/SWAMPy/src/simulate_metagenome.py'` to use swampy as a command rather than python simulate_metagenome.py. 
+
 ## Quickstart
 
 Example [input files](https://github.com/goldman-gp-ebi/SWAMPy/wiki/SWAMPy-method#1-read-input-files) i.e. genomes.fasta and abudances.tsv are already included in the example directory.
