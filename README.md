@@ -23,7 +23,7 @@ A way to do this on a Debian-based system, with Python 3.9.7 and pip already ins
 
 ```
 pip install pandas, biopython
-sudo apt-get install art_illumina, bowtie2
+sudo apt-get install art-nextgen-simulation-tools, bowtie2
 ```
 
 Or you can also use conda as follows to create a new environment with the dependencies and correct versions (RECOMMENDED):
