@@ -19,7 +19,7 @@ cd SWAMPy
 2. Install dependencies `pandas` and `biopython`.
 You need to ensure `bowtie2` and `art_illumina` are available from your command line (i.e. both of the binaries of these tools are available from your `$PATH` environment variable). The program also requires Python version 3.9.7.
 
-A way to do this on a Debian-based system, with Python 3.9.7 and pip already installed, is below: 
+A way to do this on Ubuntu 20.04, with Python 3.9.7 and pip already installed, is below: 
 
 ```
 pip install pandas, biopython
