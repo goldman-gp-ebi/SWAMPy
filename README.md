@@ -87,7 +87,7 @@ python simulate_metagenome.py --help
 ### Run the same example simulation again with all the parameters explicitly defined, and with the random seed set. 
 ```
 python simulate_metagenome.py \
-    --genomes_file ../example/genome.fasta \
+    --genomes_file ../example/genomes.fasta \
     --temp_folder ../example/temp/
     --genome_abundances ../example/abundances.tsv \
     --primer_set a1 \
