@@ -62,6 +62,29 @@ and then move the `art_illumina` binary into wherever the conda environment live
 
 Optionally, run `alias swampy='python /path/to/SWAMPy/src/simulate_metagenome.py'` to use `swampy` as a command rather than `python simulate_metagenome.py`. 
 
+
+## Docker Installation
+
+The latest SWAMPy Docker image can be found on Docker Hub at https://hub.docker.com/r/wboulton12/swampy, and pulled through the command 
+
+```
+docker pull wboulton12/swampy:latest
+```
+
+To run SWAMPy through Docker, mount the volumes from the input files (genomes and relative abundances) into the `/swampy_in` directory in the virtual filesystem, and mount the directory where output files are expected to `/swampy_out`. The command below is an example, where the output files are sent to the present working directory:
+
+```
+docker run -u $(id -u) -v $(pwd):/swampy_out -v /home/will/Desktop/SWAMPy/docker_example:/swampy_in wboulton12/swampy:latest --genomes_file /swampy_in/my_genomes.fasta --genome_abundances /swampy_in/my_abundances.tsv
+
+# docker run (not as root, as your user), 
+# (mount current directory to swampy_out, mount the folder containing genomes and abundance files to swampy_in),
+# name of container,
+# command line arguments passed to swampy. 
+# Note that since the input and output folders are already mapped, you should not pass a --output_folder flag to swampy. 
+```
+
+
+
 ## Quickstart
 
 Example [input files](https://github.com/goldman-gp-ebi/SWAMPy/wiki/SWAMPy-method#1-read-input-files) i.e. genomes.fasta and abudances.tsv are already included in the example directory.
