@@ -170,6 +170,11 @@ of taking these draws may be possible, so this method is called 'dirichlet_1'.
 
 - Alt primers are only really relevant to **ARTIC v3**. ARTIC v3 has extra primers which are tagged as ALT - these are 'alternative' primer ends for certain amplicons where the original amplicons were dropping out a lot. These 'alt' primers are added to the primer pool along with the original primers. Therefore for these amplicons (where alt primers exist), there are a total of four possible versions of the amplicon that could be made, depending on whether the left/right end was used with the alt primer or not. In the original version of this code, we would only simulate two of these possibilities --- cases where both ends used the original primer and cases where both ends used the alt primer. However since then, because ARTIC v4 (which we assume will end up superceding ARTIC v3) was released, and has no alts (and also most other sequencing protocols have no alts either) we decided to ignore alt primers altogether, and our version of ARTIC does not include any simulation of alt primers. If you want this feature please contact us.
 
+## Citation
+If you used SWAMPy, please cite the publication 
+[SWAMPy: Simulating SARS-CoV-2 Wastewater Amplicon Metagenomes with Python](https://doi.org/10.1101/2022.12.10.519890).
+
+
 ## Aknowledgements
 
 We are using [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml), [ART](https://www.niehs.nih.gov/research/resources/software/biostatistics/art/index.cfm) and [biopython](https://biopython.org/), as well as other python packages (pandas and numpy)
