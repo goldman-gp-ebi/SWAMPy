@@ -83,7 +83,23 @@ docker run -u $(id -u) -v $(pwd):/swampy_out -v /home/will/Desktop/SWAMPy/docker
 # Note that since the input and output folders are already mapped, you should not pass a --output_folder flag to swampy. 
 ```
 
+## Singularity Installation
 
+Build the singularity image file after pulling SWAMPy from the Docker Hub:
+
+```
+singularity pull docker://wboulton12/swampy:latest
+```
+
+Then execute the sif file (use exec rather than run):
+
+```
+singularity exec swampy_latest.sif python3 /home/src/simulate_metagenome.py \
+    --genomes_file /path/to/genomes.fasta \
+    --genome_abundances /path/to/abundances.tsv \
+    --temp_folder /some/temporary/folder/you/can/write/to \
+    --output_folder $(pwd) 
+```
 
 ## Quickstart
 
@@ -175,7 +191,7 @@ If you used SWAMPy, please cite the publication
 [SWAMPy: Simulating SARS-CoV-2 Wastewater Amplicon Metagenomes with Python](https://doi.org/10.1101/2022.12.10.519890).
 
 
-## Aknowledgements
+## Acknowledgements
 
 We are using [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml), [ART](https://www.niehs.nih.gov/research/resources/software/biostatistics/art/index.cfm) and [biopython](https://biopython.org/), as well as other python packages (pandas and numpy)
 and are using a primer set coming from [ARTIC v1](https://artic.network/). 
