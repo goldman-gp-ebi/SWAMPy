@@ -151,6 +151,9 @@ def load_command_line_args():
     elif PRIMER_SET=="a4":
         PRIMERS_FILE = join(PRIMER_SET_FOLDER,"artic_v4_primers.fastq")
         logging.info(f"Primer set: Artic v4")
+    elif PRIMER_SET=="a5":
+        PRIMERS_FILE = join(PRIMER_SET_FOLDER,"artic_v5.3_primers.fastq")
+        logging.info(f"Primer set: Artic v5.3")
     elif PRIMER_SET=="n2":
         PRIMERS_FILE = join(PRIMER_SET_FOLDER,"nimagen_v2_primers.fastq")
         logging.info(f"Primer set: Nimagen v2")
@@ -179,6 +182,8 @@ def load_command_line_args():
         AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "artic_v3_amplicon_distribution.tsv")
     elif PRIMER_SET=="a4":
         AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "artic_v4_amplicon_distribution.tsv")
+    elif PRIMER_SET=="a5":
+        AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "artic_v5.3_amplicon_distribution.tsv")
     elif PRIMER_SET=="n2":
         AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "nimagen_v2_amplicon_distribution.tsv")
 
@@ -199,6 +204,8 @@ def load_command_line_args():
         PRIMER_BED = join(PRIMER_SET_FOLDER,"articV3_no_alt.bed")
     elif PRIMER_SET=="a4":
         PRIMER_BED = join(PRIMER_SET_FOLDER,"articV4.bed")
+    elif PRIMER_SET=="a5":
+        PRIMER_BED = join(PRIMER_SET_FOLDER,"articV5.3.bed")
     elif PRIMER_SET=="n2":
         PRIMER_BED = join(PRIMER_SET_FOLDER,"nimagenV2.bed")
 
