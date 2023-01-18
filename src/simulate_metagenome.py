@@ -59,7 +59,7 @@ def setup_parser():
     parser.add_argument("--genomes_file", metavar='', help="File containing all of the genomes that might be used", default=GENOMES_FILE)
     parser.add_argument("--temp_folder", "-t", metavar='', help="A path for a temporary output folder to store intemediate files. Including FASTA files of genomes, amplicons, and their bowtie2 indices", default=TEMP_FOLDER)
     parser.add_argument("--genome_abundances", "-ab", metavar='', help="TSV of genome abundances.", default=ABUNDANCES_FILE)
-    parser.add_argument("--primer_set", "-ps", metavar='', help="Primer set can be either a1 for Artic v1, a4 for Artic v4 and n2 for Nimagen v2, Default is a1.", default="a1",choices=["a1","a4","n2"])
+    parser.add_argument("--primer_set", "-ps", metavar='', help="Primer set can be either a1 for Artic v1, a4 for Artic v4, a5 for Artic v5.3, and n2 for Nimagen v2, Default is a1.", default="a1",choices=["a1","a4","a5","n2"])
     parser.add_argument("--output_folder", "-o", metavar='', help="A path for a folder where the output fastq files will be stored. Default is working directory", default=OUTPUT_FOLDER)
     parser.add_argument("--output_filename_prefix", "-x", metavar='', help="Name of the fastq files name1.fastq, name2.fastq", default=OUTPUT_FILENAME_PREFIX)
     parser.add_argument("--seqSys", metavar='', help="Name of the sequencing system, options to use are given by the art_illumina help text, and are:" + 
