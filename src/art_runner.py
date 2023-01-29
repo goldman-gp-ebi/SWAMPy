@@ -12,13 +12,14 @@ import logging
 
 class ArtIllumina:
 
-    def __init__(self, outpath, output_filename_prefix, read_length, seq_sys, verbose,temp):
+    def __init__(self, outpath, output_filename_prefix, read_length, seq_sys, verbose,temp, nreads):
         self.outpath = outpath
         self.output_filename_prefix = output_filename_prefix
         self.read_length = read_length
         self.seq_sys = seq_sys
         self.verbose=verbose
         self.temp=temp
+        self.nreads=nreads
 
     def run_once(self, infile, n_reads, out_prefix, rnd_seed):
 
@@ -77,7 +78,7 @@ class ArtIllumina:
         logging.info("Creating random data for shuffle.")
         with open(join(self.temp,"tmp.sms.random_data"), "w") as random_data:
             ALPHABET = np.array(list(string.ascii_lowercase))
-            random_data.write("".join(np.random.choice(ALPHABET, size=5000000)))
+            random_data.write("".join(np.random.choice(ALPHABET, size=max(5000000, int(2.5*self.nreads)))))
 
         # shuffle the fastq's so that the reads are in a random order. 
         shuffle_fastq_file(join(self.temp,"tmp.sms.all_files_unshuffled1.fastq"), join(self.outpath, f"{self.output_filename_prefix}_R1.fastq"), join(self.temp,"tmp.sms.random_data"))
@@ -90,10 +91,10 @@ def shuffle_fastq_file(input_filename, output_filename, random_seed):
     os.system(f"paste -s -d '\t\t\t\n' {input_filename} | shuf --random-source={random_seed} | tr '\t&' '\n/' > {output_filename}")
 
 @contextmanager
-def art_illumina(outpath, output_filename_prefix, read_length, seq_sys, verbose,temp):
+def art_illumina(outpath, output_filename_prefix, read_length, seq_sys, verbose,temp, nreads):
     
     try:
-        yield ArtIllumina(outpath, output_filename_prefix, read_length, seq_sys, verbose,temp)
+        yield ArtIllumina(outpath, output_filename_prefix, read_length, seq_sys, verbose,temp, nreads)
     
     finally:
         logging.info("Exiting sars-cov-2 metagenome simulator - tidying up.")
