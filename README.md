@@ -137,7 +137,7 @@ python simulate_metagenome.py \
     --read_length 250 \
     --seed 10 \
     --amplicon_distribution  dirichlet_1 \
-    --amplicon_pseudocounts 10000 \
+    --amplicon_pseudocounts 200 \
     --unique_insertion_rate 0.00002 \
     --unique_deletion_rate 0.000115 \
     --unique_substitution_rate 0.002485 \
