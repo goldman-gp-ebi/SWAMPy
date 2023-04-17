@@ -5,6 +5,7 @@ import pandas as pd
 import subprocess
 from io import StringIO
 import re
+import logging
 
 #Produce an alternative allele for a given error.
 def alts(ref,type,len=0):
@@ -181,6 +182,10 @@ def add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS
                             seq_idx+=1
                         if c_idx==len(CIGAR)-1 and ref_idx==aim:#final letter
                             seq_pos.append(seq_idx)
+                        elif c_idx==len(CIGAR)-1 and ref_idx!=aim:#CIGAR is shorter, all deletions at the end, skip the error
+                            logging.warning(f'A PCR error is skipped since the position does not exist in the amplicon{i.amplicon_filepath}. This is not a significant problem if you see only one of this warning. Otherwise see Extra options and potential bugs section.')
+                            seq_pos.append(50000) #dummy placeholder (issue #6)
+
 
 
                     #How many reads this specific error will have
@@ -220,7 +225,8 @@ def add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS
                     #create a dataframe of all errors of the amplicon. Contains pos, mut_index, errortype, length, alt
                     seq_pos_df=pd.DataFrame(dict(seq_pos=seq_pos,mut_indices=mut_indices))
                     seq_pos_df=seq_pos_df.merge(errors[["errortype","mut_indices","length","alt"]],on="mut_indices")
-
+                    seq_pos_df=seq_pos_df[seq_pos_df['seq_pos']!=50000]#skip errors that correspond to deletions (issue #6)
+                    
                     # amplicon's number of reads - total count of all error combination versions is the count of non-mutated (old) version.
                     amplicons.append(i.amplicon_filepath)
                     n_reads.append(i.n_reads - sum(reads_df["count"]))
