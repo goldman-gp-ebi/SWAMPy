@@ -186,7 +186,7 @@ def add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS
                             seq_pos.append(seq_idx)
                         elif c_idx==len(CIGAR)-1 and ref_idx!=aim:#CIGAR is shorter, all deletions at the end, skip the error
                             logging.warning(f'A PCR error is skipped since the position does not exist in the amplicon {i.amplicon_filepath}. This is not a significant problem if you see only one of this warning. Otherwise see Extra options and potential bugs section.')
-                            seq_pos.append(ISSUE_6_ERROR_CODE) #dummy placeholder (issue #6)
+                            seq_pos.append(ISSUE_6_BUG_CODE) #dummy placeholder (issue #6)
 
 
 
