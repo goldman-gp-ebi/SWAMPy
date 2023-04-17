@@ -174,6 +174,8 @@ Things to watch out for:
 This is because the leftmost primer 1 and rightmost primer 98 basically never match in a genome. 
 Also watch out for long runs of N's in the primer sites, if these are there then that amplicon will drop out. 
 
+- If a source genome amplicon is has deletions at the end, PCR errors that were supposed to be on those loci will be skipped only for that souce genome. A warning is printed in this case.
+
 - Special characters in the fasta genome ids could potentially cause a problem. In the code, the characters "/", "," and " " are dealt with,
 but other whitespace characters or special characters such as "&" could cause a bug. 
 
