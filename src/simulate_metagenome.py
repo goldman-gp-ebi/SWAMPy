@@ -59,7 +59,10 @@ def setup_parser():
     parser.add_argument("--genomes_file", metavar='', help="File containing all of the genomes that might be used", default=GENOMES_FILE)
     parser.add_argument("--temp_folder", "-t", metavar='', help="A path for a temporary output folder to store intemediate files. Including FASTA files of genomes, amplicons, and their bowtie2 indices", default=TEMP_FOLDER)
     parser.add_argument("--genome_abundances", "-ab", metavar='', help="TSV of genome abundances.", default=ABUNDANCES_FILE)
-    parser.add_argument("--primer_set", "-ps", metavar='', help="Primer set can be either a1 for Artic v1, a4 for Artic v4, a5 for Artic v5.3, and n2 for Nimagen v2, Default is a1.", default="a1",choices=["a1","a4","a5","n2"])
+    parser.add_argument("--primer_set", "-ps", metavar='', help="Primer set. This sets defaults for the parameters, --primers_file, --primer_bed, and --amplicon_distribution_file, which are overwritten if separately provided. Can be either a1 for Artic v1, a4 for Artic v4, a5 for Artic v5.3, and n2 for Nimagen v2, or c for custom (custom privides no defaults, so each of --primers_file, --primer_bed, and --amplicon_distribution_file must be provided separately). Default is a1.", default="a1",choices=["a1","a4","a5","n2","c"])
+    parser.add_argument("--primers_file", metavar='', help="Fastq file with formatted names of primers - see primer_sets folder for examples. Only needed if using --primer_set=custom.", default=None)
+    parser.add_argument("--primer_bed", metavar='', help="bed formatted file of primers to use, see primer_sets folder for examples. Only needed if using --primer_bed=custom", default=None)
+    parser.add_argument("--amplicon_distribution_file", metavar='', help="Tsv file of a prior for amplicon proportions, see primer_sets folder for examples. Only needed if using --primer_bed=custom. ", default=None)
     parser.add_argument("--output_folder", "-o", metavar='', help="A path for a folder where the output fastq files will be stored. Default is working directory", default=OUTPUT_FOLDER)
     parser.add_argument("--output_filename_prefix", "-x", metavar='', help="Name of the fastq files name1.fastq, name2.fastq", default=OUTPUT_FILENAME_PREFIX)
     parser.add_argument("--seqSys", metavar='', help="Name of the sequencing system, options to use are given by the art_illumina help text, and are:" + 
@@ -145,20 +148,48 @@ def load_command_line_args():
     PRIMER_SET=args.primer_set
 
     global PRIMERS_FILE
+    global AMPLICON_DISTRIBUTION_FILE
+    global PRIMER_BED 
+
     if PRIMER_SET=="a1":
         PRIMERS_FILE = join(PRIMER_SET_FOLDER,"artic_v3_primers_no_alts.fastq")
         logging.info(f"Primer set: Artic v1")
+        PRIMER_BED = join(PRIMER_SET_FOLDER,"articV3_no_alt.bed")
+        AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "artic_v3_amplicon_distribution.tsv")
+    
     elif PRIMER_SET=="a4":
         PRIMERS_FILE = join(PRIMER_SET_FOLDER,"artic_v4_primers.fastq")
         logging.info(f"Primer set: Artic v4")
+        PRIMER_BED = join(PRIMER_SET_FOLDER,"articV4.bed")
+        AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "artic_v4_amplicon_distribution.tsv")
+    
     elif PRIMER_SET=="a5":
         PRIMERS_FILE = join(PRIMER_SET_FOLDER,"artic_v5.3_primers.fastq")
         logging.info(f"Primer set: Artic v5.3")
+        PRIMER_BED = join(PRIMER_SET_FOLDER,"articV5.3.bed")
+        AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "artic_v5.3_amplicon_distribution.tsv")
+    
     elif PRIMER_SET=="n2":
         PRIMERS_FILE = join(PRIMER_SET_FOLDER,"nimagen_v2_primers.fastq")
         logging.info(f"Primer set: Nimagen v2")
+        PRIMER_BED = join(PRIMER_SET_FOLDER,"nimagenV2.bed")
+        AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "nimagen_v2_amplicon_distribution.tsv")
+    
+    elif PRIMER_SET=="c":
+        PRIMERS_FILE = args.primers_file
+        loggin.info("Primer set: Custom")
+        PRIMER_BED = args.primer_bed
+        AMPLICON_DISTRIBUTION_FILE = args.amplicon_distribution_file
 
-    global N_READS
+    if args.primers_file:
+        PRIMERS_FILE = args.primers_file
+    if args.primer_bed:
+        PRIMER_BED = args.primer_bed
+    if args.amplicon_distribution_file:
+        AMPLICON_DISTRIBUTION_FILE = args.amplicon_distribution_file
+
+
+global N_READS
     N_READS = int(args.n_reads)
     logging.info(f"Number of reads: {N_READS}")
 
@@ -177,16 +208,6 @@ def load_command_line_args():
     global AMPLICON_DISTRIBUTION
     AMPLICON_DISTRIBUTION = args.amplicon_distribution
 
-    global AMPLICON_DISTRIBUTION_FILE
-    if PRIMER_SET=="a1":
-        AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "artic_v3_amplicon_distribution.tsv")
-    elif PRIMER_SET=="a4":
-        AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "artic_v4_amplicon_distribution.tsv")
-    elif PRIMER_SET=="a5":
-        AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "artic_v5.3_amplicon_distribution.tsv")
-    elif PRIMER_SET=="n2":
-        AMPLICON_DISTRIBUTION_FILE = join(PRIMER_SET_FOLDER, "nimagen_v2_amplicon_distribution.tsv")
-
     global AMPLICON_PSEUDOCOUNTS
     AMPLICON_PSEUDOCOUNTS = int(args.amplicon_pseudocounts)
     logging.info(f"Amplicon pseudocounts/ i.e. quality parameter: {AMPLICON_PSEUDOCOUNTS}")
@@ -198,16 +219,6 @@ def load_command_line_args():
 
     global NO_PCR_ERRORS
     NO_PCR_ERRORS = args.no_pcr_errors
-
-    global PRIMER_BED 
-    if PRIMER_SET=="a1":
-        PRIMER_BED = join(PRIMER_SET_FOLDER,"articV3_no_alt.bed")
-    elif PRIMER_SET=="a4":
-        PRIMER_BED = join(PRIMER_SET_FOLDER,"articV4.bed")
-    elif PRIMER_SET=="a5":
-        PRIMER_BED = join(PRIMER_SET_FOLDER,"articV5.3.bed")
-    elif PRIMER_SET=="n2":
-        PRIMER_BED = join(PRIMER_SET_FOLDER,"nimagenV2.bed")
 
     global U_SUBS_RATE
     U_SUBS_RATE = float(args.unique_substitution_rate)
