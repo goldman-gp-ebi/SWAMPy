@@ -32,7 +32,7 @@ SEQ_SYS = "MSv3"
 SEED = np.random.randint(1000000000)
 AMPLICON_DISTRIBUTION = "DIRICHLET_1"
 AMPLICON_PSEUDOCOUNTS = 200
-
+DISALLOWED_POSITIONS = ""
 
 ##PCR-error related variables:
 WUHAN_REF = join(dirname(dirname(abspath(__file__))), "ref","MN908947.3")
@@ -92,6 +92,7 @@ def setup_parser():
     parser.add_argument("--r_subs_VAF_alpha","-rsv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the recurrent PCR error. Default is equal to unique erros", default=SUBS_VAF_DIRICLET_PARAMETER)
     parser.add_argument("--r_del_VAF_alpha","-rdv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the recurrent PCR error. Default is equal to unique erros", default=DEL_VAF_DIRICLET_PARAMETER)
     parser.add_argument("--r_ins_VAF_alpha","-riv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the recurrent PCR error. Default is equal to unique erros", default=INS_VAF_DIRICLET_PARAMETER)
+    parser.add_argument("--disallowed_positions", "-dis", metavar='', help="A comma separated list of 0 based genome coordinates (relative to the reference Wuhan-Hu-1 genome) where substitutions and deletions are not allowed.", default=DISALLOWED_POSITIONS)
     return parser
 
 def load_command_line_args():
@@ -189,7 +190,7 @@ def load_command_line_args():
         AMPLICON_DISTRIBUTION_FILE = args.amplicon_distribution_file
 
 
-global N_READS
+    global N_READS
     N_READS = int(args.n_reads)
     logging.info(f"Number of reads: {N_READS}")
 
@@ -237,6 +238,9 @@ global N_READS
 
     global R_DEL_RATE
     R_DEL_RATE = float(args.recurrent_deletion_rate)
+    
+    global DISALLOWED_POSITIONS
+    DISALLOWED_POSITIONS = { int(x) for x in DISALLOWED_POSITIONS.split(",") if len(x) > 0 }
 
     global DEL_LENGTH_GEOMETRIC_PARAMETER
     DEL_LENGTH_GEOMETRIC_PARAMETER = float(args.deletion_length_p)
@@ -415,7 +419,7 @@ if __name__ == "__main__":
         amplicons,n_reads,vcf_errordf=add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,
                                             U_SUBS_RATE,U_INS_RATE,U_DEL_RATE,R_SUBS_RATE,R_INS_RATE,R_DEL_RATE,DEL_LENGTH_GEOMETRIC_PARAMETER,INS_MAX_LENGTH,
                                             SUBS_VAF_DIRICLET_PARAMETER,INS_VAF_DIRICLET_PARAMETER,DEL_VAF_DIRICLET_PARAMETER,
-                                            R_SUBS_VAF_DIRICLET_PARAMETER,R_INS_VAF_DIRICLET_PARAMETER,R_DEL_VAF_DIRICLET_PARAMETER)
+                                            R_SUBS_VAF_DIRICLET_PARAMETER,R_INS_VAF_DIRICLET_PARAMETER,R_DEL_VAF_DIRICLET_PARAMETER, DISALLOWED_POSITIONS)
                
         if amplicons=="No":
             if VERBOSE:

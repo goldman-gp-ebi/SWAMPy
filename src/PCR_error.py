@@ -52,7 +52,7 @@ def amplicon_lookup(PRIMER_BED,position,recurrence):
 def add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,U_SUBS_RATE,U_INS_RATE,U_DEL_RATE,
                     R_SUBS_RATE,R_INS_RATE,R_DEL_RATE,DEL_LENGTH_GEOMETRIC_PARAMETER,INS_MAX_LENGTH,
                     SUBS_VAF_DIRICLET_PARAMETER,INS_VAF_DIRICLET_PARAMETER,DEL_VAF_DIRICLET_PARAMETER,
-                    R_SUBS_VAF_DIRICLET_PARAMETER,R_INS_VAF_DIRICLET_PARAMETER,R_DEL_VAF_DIRICLET_PARAMETER):
+                    R_SUBS_VAF_DIRICLET_PARAMETER,R_INS_VAF_DIRICLET_PARAMETER,R_DEL_VAF_DIRICLET_PARAMETER,DISALLOWED_POSITIONS):
 
 
     REF=SeqIO.read(f"{WUHAN_REF}.fasta", format="fasta")
@@ -84,6 +84,26 @@ def add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS
     errors["VAF"]=errors.apply(lambda x: np.random.dirichlet(VAF[x.errortype], size=None)[0] if x.recurrence=="Unique" else np.random.dirichlet(R_VAF[x.errortype], size=None)[0],axis=1)
     errors["amplicons"]=errors.apply(lambda x: amplicon_lookup(PRIMER_BED,x.pos,x.recurrence),axis=1)
     errors = errors.loc[errors['VAF']!=0,]
+    # don't allow substitutions in the disallowed positions 
+    errors = errors[~(
+        (errors.errortype=="SUBS") & (errors.pos.isin(DISALLOWED_POSITIONS))
+    )]
+    # don't allow deletions of the disallowed positions
+
+    def deletion_overlaps_disallowed_pos(row):
+        if row.errortype != "DEL":
+            return False
+
+        s = { x for x in DISALLOWED_POSITIONS if x >= row.pos }.intersection(
+            { x for x in DISALLOWED_POSITIONS if x <= (row.pos + row.length) }
+        )
+
+        if len(s) > 0:
+            return True
+        
+        return False
+
+    errors = errors[~errors.apply(deletion_overlaps_disallowed_pos, axis=1)]
 
     #all amplicons to be mutated
     error_amplicons=[]
