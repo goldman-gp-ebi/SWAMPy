@@ -3,7 +3,8 @@
 This project is intended to simulate SARS-CoV-2 metagenomes taken from wastewater samples. Synthetic mixtures of amplicons are produced, based on proportions of viral genomes that are supplied by the user and a supported primer set of choice. See [our method](https://github.com/goldman-gp-ebi/sars-cov-2-metagenomic-simulator/wiki/SWAMPy-method) to learn about how it works.
 
 
-![image](https://user-images.githubusercontent.com/57137586/151800373-55048f9a-3f34-42f3-9f63-8f6190c5bde4.png)
+<img width="2560" alt="image" src="https://github.com/goldman-gp-ebi/SWAMPy/assets/57137586/5d3f67c2-c697-465d-8978-5ca45c4c0d32">
+
 
 
 
