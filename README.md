@@ -193,10 +193,10 @@ If you used SWAMPy, please cite the publication
 [SWAMPy: Simulating SARS-CoV-2 Wastewater Amplicon Metagenomes with Python](https://doi.org/10.1101/2022.12.10.519890).
 
 ## Change log
-As of 07365c7, --primer_set option is required from the user and has no default to emphasise the simulation's dependence on the specific primer set used.
-As of e7ae4ec, --disallowed_positions has been added to stop High-frequency error introduction from specific loci.
-As of 0cf5f16, SWAMPy accepts files for custom primer sets (see CLI options) though we still encourage users to add primer set panels as in issue #2 and send us a PR for the benefit of the community.
-As of ce23577, Artic V5 is supported thanks to @j3551ca!
+- As of 07365c7, --primer_set option is required from the user and has no default to emphasise the simulation's dependence on the specific primer set used.
+- As of e7ae4ec, --disallowed_positions has been added to stop High-frequency error introduction from specific loci.
+- As of 0cf5f16, SWAMPy accepts files for custom primer sets (see CLI options) though we still encourage users to add primer set panels as in issue #2 and send us a PR for the benefit of the community.
+- As of ce23577, Artic V5 is supported thanks to @j3551ca!
 
 ## Acknowledgements
 
