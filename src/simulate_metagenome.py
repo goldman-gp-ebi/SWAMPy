@@ -32,7 +32,6 @@ SEQ_SYS = "MSv3"
 SEED = np.random.randint(1000000000)
 AMPLICON_DISTRIBUTION = "DIRICHLET_1"
 AMPLICON_PSEUDOCOUNTS = 200
-DISALLOWED_POSITIONS = ""
 
 ##PCR-error related variables:
 WUHAN_REF = join(dirname(dirname(abspath(__file__))), "ref","MN908947.3")
@@ -45,6 +44,7 @@ R_DEL_RATE = 0
 
 DEL_LENGTH_GEOMETRIC_PARAMETER = 0.69
 INS_MAX_LENGTH = 14
+DISALLOWED_POSITIONS = ""
 
 SUBS_VAF_DIRICLET_PARAMETER = "0.29,1.89"
 INS_VAF_DIRICLET_PARAMETER = "0.33,0.45"
@@ -59,7 +59,7 @@ def setup_parser():
     parser.add_argument("--genomes_file", metavar='', help="File containing all of the genomes that might be used", default=GENOMES_FILE)
     parser.add_argument("--temp_folder", "-t", metavar='', help="A path for a temporary output folder to store intemediate files. Including FASTA files of genomes, amplicons, and their bowtie2 indices", default=TEMP_FOLDER)
     parser.add_argument("--genome_abundances", "-ab", metavar='', help="TSV of genome abundances.", default=ABUNDANCES_FILE)
-    parser.add_argument("--primer_set", "-ps", metavar='', help="Primer set. This sets defaults for the parameters, --primers_file, --primer_bed, and --amplicon_distribution_file, which are overwritten if separately provided. Can be either a1 for Artic v1, a4 for Artic v4, a5 for Artic v5.3, and n2 for Nimagen v2, or c for custom (custom privides no defaults, so each of --primers_file, --primer_bed, and --amplicon_distribution_file must be provided separately). Default is a1.", default="a1",choices=["a1","a4","a5","n2","c"])
+    parser.add_argument("--primer_set", "-ps", metavar='', help="Primer set. This sets defaults for the parameters, --primers_file, --primer_bed, and --amplicon_distribution_file, which are overwritten if separately provided. Can be either a1 for Artic v1, a4 for Artic v4, a5 for Artic v5.3, and n2 for Nimagen v2, or c for custom (custom provides no defaults, so each of --primers_file, --primer_bed, and --amplicon_distribution_file must be provided separately)",required=True,choices=["a1","a4","a5","n2","c"])
     parser.add_argument("--primers_file", metavar='', help="Fastq file with formatted names of primers - see primer_sets folder for examples. Only needed if using --primer_set=custom.", default=None)
     parser.add_argument("--primer_bed", metavar='', help="bed formatted file of primers to use, see primer_sets folder for examples. Only needed if using --primer_bed=custom", default=None)
     parser.add_argument("--amplicon_distribution_file", metavar='', help="Tsv file of a prior for amplicon proportions, see primer_sets folder for examples. Only needed if using --primer_bed=custom. ", default=None)
