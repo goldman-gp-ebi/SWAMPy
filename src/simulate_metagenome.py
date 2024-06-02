@@ -1,11 +1,9 @@
 import argparse
-from genericpath import exists
 from os.path import dirname, join, abspath, basename
 import os
 import glob
 import logging
 from Bio import SeqIO
-import subprocess
 import pandas as pd
 import numpy as np
 import random
@@ -32,6 +30,12 @@ SEQ_SYS = "MSv3"
 SEED = np.random.randint(1000000000)
 AMPLICON_DISTRIBUTION = "DIRICHLET_1"
 AMPLICON_PSEUDOCOUNTS = 200
+DISALLOWED_POSITIONS = ""
+FRAGMENT_AMPLICONS = False
+FRAGMENT_LEN_MEAN = 0
+FRAGMENT_LEN_SD = 0
+
+
 
 ##PCR-error related variables:
 WUHAN_REF = join(dirname(dirname(abspath(__file__))), "ref","MN908947.3")
@@ -46,13 +50,13 @@ DEL_LENGTH_GEOMETRIC_PARAMETER = 0.69
 INS_MAX_LENGTH = 14
 DISALLOWED_POSITIONS = ""
 
-SUBS_VAF_DIRICLET_PARAMETER = "0.29,1.89"
-INS_VAF_DIRICLET_PARAMETER = "0.33,0.45"
-DEL_VAF_DIRICLET_PARAMETER = "0.59,0.41"
+SUBS_VAF_DIRICHLET_PARAMETER = "0.29,1.89"
+INS_VAF_DIRICHLET_PARAMETER = "0.33,0.45"
+DEL_VAF_DIRICHLET_PARAMETER = "0.59,0.41"
 
-R_SUBS_VAF_DIRICLET_PARAMETER = SUBS_VAF_DIRICLET_PARAMETER
-R_INS_VAF_DIRICLET_PARAMETER = INS_VAF_DIRICLET_PARAMETER
-R_DEL_VAF_DIRICLET_PARAMETER = DEL_VAF_DIRICLET_PARAMETER
+R_SUBS_VAF_DIRICHLET_PARAMETER = SUBS_VAF_DIRICHLET_PARAMETER
+R_INS_VAF_DIRICHLET_PARAMETER = INS_VAF_DIRICHLET_PARAMETER
+R_DEL_VAF_DIRICHLET_PARAMETER = DEL_VAF_DIRICHLET_PARAMETER
 
 def setup_parser():
     parser = argparse.ArgumentParser(description="Run SARS-CoV-2 metagenome simulation.")
@@ -74,6 +78,9 @@ def setup_parser():
     parser.add_argument("--read_length", "-l", metavar='', help="Length of reads taken from the sequencing machine.", default=READ_LENGTH)
     parser.add_argument("--seed", "-s", metavar='', help="Random seed", default=SEED)
     parser.add_argument("--quiet", "-q", help="Add this flag to supress verbose output." ,action='store_true')
+    parser.add_argument("--fragment_amplicons", help="Cut amplicons randomly into fragments when running ART for sequencing errors (set as True or False, default is False).", action='store_true', default = FRAGMENT_AMPLICONS)
+    parser.add_argument("--fragment_len_mean", help="Mean fragment length if using --fragment_amplicons", default = FRAGMENT_LEN_MEAN)
+    parser.add_argument("--fragment_len_sd", help="Standard deviation of fragment lengths if using --fragment_amplicons", default = FRAGMENT_LEN_SD)
     parser.add_argument("--amplicon_distribution",help= "Default is DIRICHLET1", metavar='', default=AMPLICON_DISTRIBUTION)
     parser.add_argument("--amplicon_pseudocounts","-c", metavar='', default=AMPLICON_PSEUDOCOUNTS)
     parser.add_argument("--autoremove", action='store_true',help="Delete temproray files after execution.")
@@ -86,12 +93,12 @@ def setup_parser():
     parser.add_argument("--recurrent_substitution_rate","-rsubs", metavar='', help="PCR substitution error rate. Recurs across source genomes. Default is 0.003357", default=R_SUBS_RATE)
     parser.add_argument("--deletion_length_p","-dl", metavar='', help="Geometric distribution parameter, p, for PCR deletion length. Default is 0.69", default=DEL_LENGTH_GEOMETRIC_PARAMETER)
     parser.add_argument("--max_insertion_length","-il", metavar='', help="Maximum PCR insertion length in bases (uniform distribution boundry). Default is 14", default=INS_MAX_LENGTH)
-    parser.add_argument("--subs_VAF_alpha","-sv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the unique PCR error. Default is 0.29,1.89", default=SUBS_VAF_DIRICLET_PARAMETER)
-    parser.add_argument("--del_VAF_alpha","-dv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the unique PCR error. Default is 0.59,0.41", default=DEL_VAF_DIRICLET_PARAMETER)
-    parser.add_argument("--ins_VAF_alpha","-iv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the unique PCR error. Default is 0.33,0.45", default=INS_VAF_DIRICLET_PARAMETER)
-    parser.add_argument("--r_subs_VAF_alpha","-rsv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the recurrent PCR error. Default is equal to unique erros", default=SUBS_VAF_DIRICLET_PARAMETER)
-    parser.add_argument("--r_del_VAF_alpha","-rdv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the recurrent PCR error. Default is equal to unique erros", default=DEL_VAF_DIRICLET_PARAMETER)
-    parser.add_argument("--r_ins_VAF_alpha","-riv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the recurrent PCR error. Default is equal to unique erros", default=INS_VAF_DIRICLET_PARAMETER)
+    parser.add_argument("--subs_VAF_alpha","-sv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the unique PCR error. Default is 0.29,1.89", default=SUBS_VAF_DIRICHLET_PARAMETER)
+    parser.add_argument("--del_VAF_alpha","-dv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the unique PCR error. Default is 0.59,0.41", default=DEL_VAF_DIRICHLET_PARAMETER)
+    parser.add_argument("--ins_VAF_alpha","-iv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the unique PCR error. Default is 0.33,0.45", default=INS_VAF_DIRICHLET_PARAMETER)
+    parser.add_argument("--r_subs_VAF_alpha","-rsv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the recurrent PCR error. Default is equal to unique erros", default=SUBS_VAF_DIRICHLET_PARAMETER)
+    parser.add_argument("--r_del_VAF_alpha","-rdv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the recurrent PCR error. Default is equal to unique erros", default=DEL_VAF_DIRICHLET_PARAMETER)
+    parser.add_argument("--r_ins_VAF_alpha","-riv", metavar='', help="alpha1,alpha2 of the Dirichlet distribution for VAF of the recurrent PCR error. Default is equal to unique erros", default=INS_VAF_DIRICHLET_PARAMETER)
     parser.add_argument("--disallowed_positions", "-dis", metavar='', help="A comma separated list of 0 based genome coordinates (relative to the reference Wuhan-Hu-1 genome) where substitutions and deletions are not allowed.", default=DISALLOWED_POSITIONS)
     return parser
 
@@ -178,7 +185,7 @@ def load_command_line_args():
     
     elif PRIMER_SET=="c":
         PRIMERS_FILE = args.primers_file
-        loggin.info("Primer set: Custom")
+        logging.info("Primer set: Custom")
         PRIMER_BED = args.primer_bed
         AMPLICON_DISTRIBUTION_FILE = args.amplicon_distribution_file
 
@@ -205,6 +212,22 @@ def load_command_line_args():
 
     global VERBOSE
     VERBOSE = not args.quiet
+
+    global FRAGMENT_AMPLICONS
+    FRAGMENT_AMPLICONS = args.fragment_amplicons
+
+    global FRAGMENT_LEN_MEAN
+    global FRAGMENT_LEN_SD
+
+    FRAGMENT_LEN_MEAN = float(args.fragment_len_mean)
+    FRAGMENT_LEN_SD = float(args.fragment_len_sd)
+
+    if FRAGMENT_AMPLICONS:
+        if FRAGMENT_LEN_MEAN < READ_LENGTH:
+            logging.error("If you plan to fragment your amplicons (--fragment_amplicons=True), you must set --fragment_len_mean and --fragment_len_sd")
+            logging.error("The mean fragment length must be greater than the read length.")
+            logging.error(f"Currently the mean fragment length is {FRAGMENT_LEN_MEAN}, the read length is {READ_LENGTH}.")
+            exit(1)
 
     global AMPLICON_DISTRIBUTION
     AMPLICON_DISTRIBUTION = args.amplicon_distribution
@@ -248,53 +271,53 @@ def load_command_line_args():
     global INS_MAX_LENGTH
     INS_MAX_LENGTH = int(args.max_insertion_length)
 
-    global SUBS_VAF_DIRICLET_PARAMETER
-    SUBS_VAF_DIRICLET_PARAMETER = args.subs_VAF_alpha.split(",")
-    if len(SUBS_VAF_DIRICLET_PARAMETER)!=2:
+    global SUBS_VAF_DIRICHLET_PARAMETER
+    SUBS_VAF_DIRICHLET_PARAMETER = args.subs_VAF_alpha.split(",")
+    if len(SUBS_VAF_DIRICHLET_PARAMETER)!=2:
         logging.error(f"subs_VAF_alpha argument must be a list of 2 values seperated by comma. Example: 0.5,0.4. You entered {args.subs_VAF_alpha} ")
         exit(1)
     else:
-        SUBS_VAF_DIRICLET_PARAMETER=[float(a) for a in SUBS_VAF_DIRICLET_PARAMETER]
+        SUBS_VAF_DIRICHLET_PARAMETER=[float(a) for a in SUBS_VAF_DIRICHLET_PARAMETER]
     
-    global INS_VAF_DIRICLET_PARAMETER
-    INS_VAF_DIRICLET_PARAMETER = args.ins_VAF_alpha.split(",")
-    if len(INS_VAF_DIRICLET_PARAMETER)!=2:
+    global INS_VAF_DIRICHLET_PARAMETER
+    INS_VAF_DIRICHLET_PARAMETER = args.ins_VAF_alpha.split(",")
+    if len(INS_VAF_DIRICHLET_PARAMETER)!=2:
         logging.error(f"ins_VAF_alpha argument must be a list of 2 values seperated by comma. Example: 0.5,0.4. You entered {args.ins_VAF_alpha} ")
         exit(1)
     else:
-        INS_VAF_DIRICLET_PARAMETER=[float(a) for a in INS_VAF_DIRICLET_PARAMETER]
+        INS_VAF_DIRICHLET_PARAMETER=[float(a) for a in INS_VAF_DIRICHLET_PARAMETER]
 
-    global DEL_VAF_DIRICLET_PARAMETER
-    DEL_VAF_DIRICLET_PARAMETER = args.del_VAF_alpha.split(",")
-    if len(DEL_VAF_DIRICLET_PARAMETER)!=2:
+    global DEL_VAF_DIRICHLET_PARAMETER
+    DEL_VAF_DIRICHLET_PARAMETER = args.del_VAF_alpha.split(",")
+    if len(DEL_VAF_DIRICHLET_PARAMETER)!=2:
         logging.error(f"del_VAF_alpha argument must be a list of 2 values seperated by comma. Example: 0.5,0.4. You entered {args.del_VAF_alpha} ")
         exit(1)
     else:
-        DEL_VAF_DIRICLET_PARAMETER=[float(a) for a in DEL_VAF_DIRICLET_PARAMETER]
+        DEL_VAF_DIRICHLET_PARAMETER=[float(a) for a in DEL_VAF_DIRICHLET_PARAMETER]
 
-    global R_SUBS_VAF_DIRICLET_PARAMETER
-    R_SUBS_VAF_DIRICLET_PARAMETER = args.r_subs_VAF_alpha.split(",")
-    if len(R_SUBS_VAF_DIRICLET_PARAMETER)!=2:
+    global R_SUBS_VAF_DIRICHLET_PARAMETER
+    R_SUBS_VAF_DIRICHLET_PARAMETER = args.r_subs_VAF_alpha.split(",")
+    if len(R_SUBS_VAF_DIRICHLET_PARAMETER)!=2:
         logging.error(f"r_subs_VAF_alpha argument must be a list of 2 values seperated by comma. Example: 0.5,0.4. You entered {args.r_subs_VAF_alpha} ")
         exit(1)
     else:
-        R_SUBS_VAF_DIRICLET_PARAMETER=[float(a) for a in R_SUBS_VAF_DIRICLET_PARAMETER]
+        R_SUBS_VAF_DIRICHLET_PARAMETER=[float(a) for a in R_SUBS_VAF_DIRICHLET_PARAMETER]
     
-    global R_INS_VAF_DIRICLET_PARAMETER
-    R_INS_VAF_DIRICLET_PARAMETER = args.r_ins_VAF_alpha.split(",")
-    if len(R_INS_VAF_DIRICLET_PARAMETER)!=2:
+    global R_INS_VAF_DIRICHLET_PARAMETER
+    R_INS_VAF_DIRICHLET_PARAMETER = args.r_ins_VAF_alpha.split(",")
+    if len(R_INS_VAF_DIRICHLET_PARAMETER)!=2:
         logging.error(f"r_ins_VAF_alpha argument must be a list of 2 values seperated by comma. Example: 0.5,0.4. You entered {args.r_ins_VAF_alpha} ")
         exit(1)
     else:
-        R_INS_VAF_DIRICLET_PARAMETER=[float(a) for a in R_INS_VAF_DIRICLET_PARAMETER]
+        R_INS_VAF_DIRICHLET_PARAMETER=[float(a) for a in R_INS_VAF_DIRICHLET_PARAMETER]
 
-    global R_DEL_VAF_DIRICLET_PARAMETER
-    R_DEL_VAF_DIRICLET_PARAMETER = args.r_del_VAF_alpha.split(",")
-    if len(R_DEL_VAF_DIRICLET_PARAMETER)!=2:
+    global R_DEL_VAF_DIRICHLET_PARAMETER
+    R_DEL_VAF_DIRICHLET_PARAMETER = args.r_del_VAF_alpha.split(",")
+    if len(R_DEL_VAF_DIRICHLET_PARAMETER)!=2:
         logging.error(f"r_del_VAF_alpha argument must be a list of 2 values seperated by comma. Example: 0.5,0.4. You entered {args.r_del_VAF_alpha} ")
         exit(1)
     else:
-        R_DEL_VAF_DIRICLET_PARAMETER=[float(a) for a in R_DEL_VAF_DIRICLET_PARAMETER]
+        R_DEL_VAF_DIRICHLET_PARAMETER=[float(a) for a in R_DEL_VAF_DIRICHLET_PARAMETER]
 
 
 if __name__ == "__main__":
@@ -418,8 +441,8 @@ if __name__ == "__main__":
 
         amplicons,n_reads,vcf_errordf=add_PCR_errors(df_amplicons,genome_abundances,PRIMER_BED,WUHAN_REF,AMPLICONS_FOLDER,
                                             U_SUBS_RATE,U_INS_RATE,U_DEL_RATE,R_SUBS_RATE,R_INS_RATE,R_DEL_RATE,DEL_LENGTH_GEOMETRIC_PARAMETER,INS_MAX_LENGTH,
-                                            SUBS_VAF_DIRICLET_PARAMETER,INS_VAF_DIRICLET_PARAMETER,DEL_VAF_DIRICLET_PARAMETER,
-                                            R_SUBS_VAF_DIRICLET_PARAMETER,R_INS_VAF_DIRICLET_PARAMETER,R_DEL_VAF_DIRICLET_PARAMETER, DISALLOWED_POSITIONS)
+                                            SUBS_VAF_DIRICHLET_PARAMETER,INS_VAF_DIRICHLET_PARAMETER,DEL_VAF_DIRICHLET_PARAMETER,
+                                            R_SUBS_VAF_DIRICHLET_PARAMETER,R_INS_VAF_DIRICHLET_PARAMETER,R_DEL_VAF_DIRICHLET_PARAMETER, DISALLOWED_POSITIONS)
                
         if amplicons=="No":
             if VERBOSE:
@@ -459,7 +482,7 @@ if __name__ == "__main__":
     
     # STEP 4: Simulate Reads
     logging.info("Generating reads using art_illumina, cycling through all genomes and remaining amplicons.")
-    with art_illumina(OUTPUT_FOLDER, OUTPUT_FILENAME_PREFIX, READ_LENGTH, SEQ_SYS,VERBOSE,TEMP_FOLDER,N_READS) as art:
+    with art_illumina(OUTPUT_FOLDER, OUTPUT_FILENAME_PREFIX, READ_LENGTH, SEQ_SYS,VERBOSE,TEMP_FOLDER,N_READS, FRAGMENT_AMPLICONS, FRAGMENT_LEN_MEAN, FRAGMENT_LEN_SD) as art:
         art.run(merged_amplicons, merged_n_reads)
 
     # STEP 5: Clean up all of the temp. directories

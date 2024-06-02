@@ -12,7 +12,7 @@ import logging
 
 class ArtIllumina:
 
-    def __init__(self, outpath, output_filename_prefix, read_length, seq_sys, verbose,temp, nreads):
+    def __init__(self, outpath, output_filename_prefix, read_length, seq_sys, verbose,temp, nreads, fragment_amplicons, fragment_len_mean, fragment_len_sd):
         self.outpath = outpath
         self.output_filename_prefix = output_filename_prefix
         self.read_length = read_length
@@ -20,13 +20,21 @@ class ArtIllumina:
         self.verbose=verbose
         self.temp=temp
         self.nreads=nreads
+        self.fragment_amplicons = fragment_amplicons
+        self.fragment_len_mean = fragment_len_mean
+        self.fragment_len_sd = fragment_len_sd
+
 
     def run_once(self, infile, n_reads, out_prefix, rnd_seed):
-
-        op = subprocess.run([
+        art_options = [
             "art_illumina", 
-            "--amplicon",
-            #"--quiet",
+        ]
+        if self.fragment_amplicons:
+            art_options += ["--mflen", str(self.fragment_len_mean), "--sdev", str(self.fragment_len_sd)]
+        else:
+            art_options += ["--amplicon"]
+            
+        art_options += [
             "--paired",
             "--rndSeed", str(rnd_seed),
             "--noALN",
@@ -36,7 +44,8 @@ class ArtIllumina:
             "--len", str(self.read_length),
             "--rcount", str(n_reads),
             "--out", out_prefix 
-        ], capture_output=True)
+        ]
+        op = subprocess.run(art_options, capture_output=True)
 
         message_lines = op.stdout.decode("ASCII").split("\n")[-4:-2]
         warning = op.stderr.decode("ASCII")
@@ -91,10 +100,10 @@ def shuffle_fastq_file(input_filename, output_filename, random_seed):
     os.system(f"paste -s -d '\t\t\t\n' {input_filename} | shuf --random-source={random_seed} | tr '\t&' '\n/' > {output_filename}")
 
 @contextmanager
-def art_illumina(outpath, output_filename_prefix, read_length, seq_sys, verbose,temp, nreads):
+def art_illumina(outpath, output_filename_prefix, read_length, seq_sys, verbose,temp, nreads, fragment_amplicons, fragment_len_mean, fragment_len_sd):
     
     try:
-        yield ArtIllumina(outpath, output_filename_prefix, read_length, seq_sys, verbose,temp, nreads)
+        yield ArtIllumina(outpath, output_filename_prefix, read_length, seq_sys, verbose,temp, nreads, fragment_amplicons, fragment_len_mean, fragment_len_sd)
     
     finally:
         logging.info("Exiting sars-cov-2 metagenome simulator - tidying up.")
