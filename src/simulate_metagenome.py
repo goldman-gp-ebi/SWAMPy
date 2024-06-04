@@ -34,6 +34,8 @@ DISALLOWED_POSITIONS = ""
 FRAGMENT_AMPLICONS = False
 FRAGMENT_LEN_MEAN = 0
 FRAGMENT_LEN_SD = 0
+ART_ERRFREE = False
+ART_QSHIFT = 0
 
 
 
@@ -85,6 +87,8 @@ def setup_parser():
     parser.add_argument("--amplicon_pseudocounts","-c", metavar='', default=AMPLICON_PSEUDOCOUNTS)
     parser.add_argument("--autoremove", action='store_true',help="Delete temproray files after execution.")
     parser.add_argument("--no_pcr_errors", action='store_true',help="Turn off PCR errors. The output will contain only sequencing errors. Other PCR-error related options will be ignored")
+    parser.add_argument("--art_errfree", action='store_true', help="Pass --errfree to ART - no sequencing errors.", default=ART_ERRFREE)
+    parser.add_argument("--art_qshift", help = "Supply ART with --qShift and --qShift2 parameters (bumps up quality scores).", default = ART_QSHIFT)
     parser.add_argument("--unique_insertion_rate","-ins", metavar='', help="PCR insertion error rate. Unique to one source genome in the mixture Default is 0.00002", default=U_INS_RATE)
     parser.add_argument("--unique_deletion_rate","-del", metavar='', help="PCR deletion error rate. Unique to one source genome in the mixture Default is 0.000115", default=U_DEL_RATE)
     parser.add_argument("--unique_substitution_rate","-subs", metavar='', help="PCR substitution error rate. Unique to one source genome in the mixture Default is 0.002485", default=U_SUBS_RATE)
@@ -243,6 +247,12 @@ def load_command_line_args():
 
     global NO_PCR_ERRORS
     NO_PCR_ERRORS = args.no_pcr_errors
+
+    global ART_ERRFREE
+    ART_ERRFREE = args.art_errfree
+
+    global ART_QSHIFT
+    ART_QSHIFT = int(args.art_qshift)
 
     global U_SUBS_RATE
     U_SUBS_RATE = float(args.unique_substitution_rate)
@@ -482,7 +492,19 @@ if __name__ == "__main__":
     
     # STEP 4: Simulate Reads
     logging.info("Generating reads using art_illumina, cycling through all genomes and remaining amplicons.")
-    with art_illumina(OUTPUT_FOLDER, OUTPUT_FILENAME_PREFIX, READ_LENGTH, SEQ_SYS,VERBOSE,TEMP_FOLDER,N_READS, FRAGMENT_AMPLICONS, FRAGMENT_LEN_MEAN, FRAGMENT_LEN_SD) as art:
+    with art_illumina(
+        OUTPUT_FOLDER, 
+        OUTPUT_FILENAME_PREFIX, 
+        READ_LENGTH, 
+        SEQ_SYS, 
+        VERBOSE, 
+        TEMP_FOLDER, 
+        N_READS, 
+        FRAGMENT_AMPLICONS, 
+        FRAGMENT_LEN_MEAN, 
+        FRAGMENT_LEN_SD,
+        ART_ERRFREE, 
+        ART_QSHIFT) as art:
         art.run(merged_amplicons, merged_n_reads)
 
     # STEP 5: Clean up all of the temp. directories

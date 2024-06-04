@@ -194,6 +194,7 @@ If you used SWAMPy, please cite the publication
 [SWAMPy: Simulating SARS-CoV-2 Wastewater Amplicon Metagenomes with Python](https://doi.org/10.1101/2022.12.10.519890).
 
 ## Change log
+- Allow to pass --errfree and --qshift options to ART to turn off read errors / shift quality scores. 
 - Allow for amplicon fragmentation with mean fragment length (and standard deviation) given by applying the options such as --fragment_amplicons, --fragment_len_mean=150, --fragment_len_sd=66. 
 - As of 07365c7, --primer_set option is required from the user and has no default to emphasise the simulation's dependence on the specific primer set used.
 - As of e7ae4ec, --disallowed_positions has been added to stop High-frequency error introduction from specific loci.
