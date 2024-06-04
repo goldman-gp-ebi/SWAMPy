@@ -23,7 +23,6 @@ class ArtIllumina:
             fragment_amplicons, 
             fragment_len_mean, 
             fragment_len_sd, 
-            errfree, 
             qshift):
         
         self.outpath = outpath
@@ -36,7 +35,6 @@ class ArtIllumina:
         self.fragment_amplicons = fragment_amplicons
         self.fragment_len_mean = fragment_len_mean
         self.fragment_len_sd = fragment_len_sd
-        self.errfree = errfree
         self.qshift = qshift
 
 
@@ -60,10 +58,9 @@ class ArtIllumina:
             "--rcount", str(n_reads),
             "--out", out_prefix 
         ]
-        if self.errfree:
-            art_options += ["--errfree"]
+
         if self.qshift != 0:
-            art_options += ["--qShift", str(self.sqshift), "--qShift2", str(self.qshift)]
+            art_options += ["--qShift", str(self.qshift), "--qShift2", str(self.qshift)]
 
         op = subprocess.run(art_options, capture_output=True)
 
@@ -131,7 +128,6 @@ def art_illumina(
     fragment_amplicons, 
     fragment_len_mean, 
     fragment_len_sd, 
-    errfree, 
     qshift):
     
     try:
@@ -146,7 +142,6 @@ def art_illumina(
             fragment_amplicons, 
             fragment_len_mean, 
             fragment_len_sd, 
-            errfree, 
             qshift
         )
     
