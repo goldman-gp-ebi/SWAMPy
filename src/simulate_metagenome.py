@@ -226,6 +226,19 @@ def load_command_line_args():
     global FRAGMENT_LEN_MEAN
     global FRAGMENT_LEN_SD
 
+    global SEQ_SYS
+    SEQ_SYS = args.seqSys
+    global QPROF1
+    QPROF1 = args.qprof1
+    global QPROF2
+    QPROF2 = args.qprof2
+
+    if SEQ_SYS.lower() == "custom":
+        if (not QPROF1) or (not QPROF2):
+            logging.error("If you supply --seqSys custom then you must supply --qprof1 and --qprof2 files. Exiting.")
+            exit("If you supply --seqSys custom then you must supply --qprof1 and --qprof2 files. Exiting.")
+
+
     FRAGMENT_LEN_MEAN = float(args.fragment_len_mean)
     FRAGMENT_LEN_SD = float(args.fragment_len_sd)
 
@@ -329,11 +342,6 @@ def load_command_line_args():
     else:
         R_DEL_VAF_DIRICHLET_PARAMETER=[float(a) for a in R_DEL_VAF_DIRICHLET_PARAMETER]
 
-
-    if SEQ_SYS.lower() == "custom":
-        if (not QPROF1) or (not QPROF2):
-            logging.error("If you supply --seqSys custom then you must supply --qprof1 and --qprof2 files. Exiting.")
-            exit("If you supply --seqSys custom then you must supply --qprof1 and --qprof2 files. Exiting.")
 
 
 if __name__ == "__main__":
