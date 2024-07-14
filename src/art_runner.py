@@ -3,7 +3,6 @@ import subprocess
 import glob
 import os
 from os.path import basename, join
-from io import StringIO
 import numpy as np
 from contextlib import contextmanager
 import string
@@ -18,6 +17,8 @@ class ArtIllumina:
             output_filename_prefix, 
             read_length, 
             seq_sys, 
+            qprof1, 
+            qprof2,
             verbose,temp, 
             nreads, 
             fragment_amplicons, 
@@ -29,9 +30,11 @@ class ArtIllumina:
         self.output_filename_prefix = output_filename_prefix
         self.read_length = read_length
         self.seq_sys = seq_sys
-        self.verbose=verbose
-        self.temp=temp
-        self.nreads=nreads
+        self.qprof1 = qprof1 
+        self.qprof2 = qprof2
+        self.verbose = verbose
+        self.temp = temp
+        self.nreads = nreads
         self.fragment_amplicons = fragment_amplicons
         self.fragment_len_mean = fragment_len_mean
         self.fragment_len_sd = fragment_len_sd
@@ -46,13 +49,26 @@ class ArtIllumina:
             art_options += ["--mflen", str(self.fragment_len_mean), "--sdev", str(self.fragment_len_sd)]
         else:
             art_options += ["--amplicon"]
+
+        if self.seq_sys.lower() == "custom":
+            if (not self.qprof1) or (not self.qprof2):
+                logging.error("If you supply --seqSys custom then you must supply --qprof1 and --qprof2 files")
+                exit("If you supply --seqSys custom then you must supply --qprof1 and --qprof2 files. Exiting.")
+
+            art_options += [
+                "--qprof1", self.qprof1,
+                "--qprof2", self.qprof2
+            ]
+        
+        else:
+            art_options += [ "--seqSys", self.seq_sys ]
+
             
         art_options += [
             "--paired",
             "--rndSeed", str(rnd_seed),
             "--noALN",
             "--maskN", str(0), 
-            "--seqSys", self.seq_sys, #"MSv3"
             "--in", infile,
             "--len", str(self.read_length),
             "--rcount", str(n_reads),
@@ -122,6 +138,8 @@ def art_illumina(
     output_filename_prefix, 
     read_length, 
     seq_sys, 
+    qprof1,
+    qprof2,
     verbose, 
     temp, 
     nreads, 
@@ -136,6 +154,8 @@ def art_illumina(
             output_filename_prefix, 
             read_length, 
             seq_sys, 
+            qprof1,
+            qprof2,
             verbose, 
             temp, 
             nreads, 

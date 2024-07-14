@@ -27,6 +27,8 @@ OUTPUT_FILENAME_PREFIX = "example"
 N_READS = 100000
 READ_LENGTH = 250
 SEQ_SYS = "MSv3"
+QPROF1 = None
+QPROF2 = None
 SEED = np.random.randint(1000000000)
 AMPLICON_DISTRIBUTION = "DIRICHLET_1"
 AMPLICON_PSEUDOCOUNTS = 200
@@ -74,7 +76,10 @@ def setup_parser():
     """GA1 - GenomeAnalyzer I (36bp,44bp), GA2 - GenomeAnalyzer II (50bp, 75bp)
            HS10 - HiSeq 1000 (100bp),          HS20 - HiSeq 2000 (100bp),      HS25 - HiSeq 2500 (125bp, 150bp)
            HSXn - HiSeqX PCR free (150bp),     HSXt - HiSeqX TruSeq (150bp),   MinS - MiniSeq TruSeq (50bp)
-           MSv1 - MiSeq v1 (250bp),            MSv3 - MiSeq v3 (250bp),        NS50 - NextSeq500 v2 (75bp)""", default="MSv3")
+           MSv1 - MiSeq v1 (250bp),            MSv3 - MiSeq v3 (250bp),        NS50 - NextSeq500 v2 (75bp), or custom - in which case
+           you need to pass in two custom (ART) quality score profiles using --qprof1 and --qprof2""", default=SEQ_SYS)
+    parser.add_argument("--qprof1", help = "Custom quality score profile for R1 reads (ART) - use with --seqSys=custom", default = QPROF1)
+    parser.add_argument("--qprof2", help = "Custom quality score profile for R1 reads (ART) - use with --seqSys=custom", default = QPROF2)
     parser.add_argument("--n_reads", "-n", metavar='', help="Approximate number of reads in fastq file (subject to sampling stochasticity).", default=N_READS)
     parser.add_argument("--read_length", "-l", metavar='', help="Length of reads taken from the sequencing machine.", default=READ_LENGTH)
     parser.add_argument("--seed", "-s", metavar='', help="Random seed", default=SEED)
@@ -325,6 +330,12 @@ def load_command_line_args():
         R_DEL_VAF_DIRICHLET_PARAMETER=[float(a) for a in R_DEL_VAF_DIRICHLET_PARAMETER]
 
 
+    if SEQ_SYS.lower() == "custom":
+        if (not QPROF1) or (not QPROF2):
+            logging.error("If you supply --seqSys custom then you must supply --qprof1 and --qprof2 files. Exiting.")
+            exit("If you supply --seqSys custom then you must supply --qprof1 and --qprof2 files. Exiting.")
+
+
 if __name__ == "__main__":
 
     # STEP 0: Read command line arguments
@@ -492,6 +503,8 @@ if __name__ == "__main__":
         OUTPUT_FILENAME_PREFIX, 
         READ_LENGTH, 
         SEQ_SYS, 
+        QPROF1, 
+        QPROF2, 
         VERBOSE, 
         TEMP_FOLDER, 
         N_READS, 
