@@ -205,7 +205,7 @@ of taking these draws may be possible, so this method is called 'dirichlet_1'.
 
 ## Citation
 If you used SWAMPy, please cite the publication 
-[SWAMPy: Simulating SARS-CoV-2 Wastewater Amplicon Metagenomes with Python](https://doi.org/10.1101/2022.12.10.519890).
+[SWAMPy: Simulating SARS-CoV-2 Wastewater Amplicon Metagenomes with Python](https://academic.oup.com/bioinformatics/advance-article/doi/10.1093/bioinformatics/btae532/7748403).
 
 ## Change log
 - Allow to pass --qprof1 and --qprof2 as custom quality score profiles for ART. 
