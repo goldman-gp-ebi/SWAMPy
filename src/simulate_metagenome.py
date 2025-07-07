@@ -11,7 +11,7 @@ import shutil
 
 from art_runner import art_illumina
 from create_amplicons import build_index, align_primers, write_amplicon
-from read_model import get_amplicon_reads_sampler
+from read_model import get_amplicon_reads_sampler, exact_sampler
 from PCR_error import add_PCR_errors
 
 
@@ -434,7 +434,10 @@ if __name__ == "__main__":
     df_amplicons["amplicon_prob"] = df_amplicons.apply(amplicon_probability_sampler, axis=1)
 
     # sample a number of reads for the amplicons of each genome: Multinomial(N_genome, p_amplicon)
-    df_amplicons["n_reads"] = df_amplicons.apply(amplicon_reads_sampler, axis=1)
+    if AMPLICON_DISTRIBUTION == "EXACT":
+        df_amplicons = exact_sampler(df_amplicons, AMPLICON_DISTRIBUTION_FILE)
+    else:
+        df_amplicons["n_reads"] = df_amplicons.apply(amplicon_reads_sampler, axis=1)
 
     # write a summary csv
     df_amplicons[
