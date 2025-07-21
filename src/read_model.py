@@ -4,14 +4,50 @@ import pandas as pd
 import logging
 
 
+def exact_sampler(
+    amplicon_df: pd.DataFrame,
+    amplicon_distribution_file: str,
+) -> pd.DataFrame:
+    """
+    Determines number of reads per amplicon as listed in `amplicon_distribution_file`:
+    | amplicon_number | Genome_1 | Genome_2 | Genome_3 |
+    | --------------: | -------: | -------: | -------: |
+    | 1               | 100      | 300      | 400      |
+    | 2               | 240      | 450      | 300      |
+    | 3               | 240      | 360      | 100      |
+    | 3               | 230      | 300      | 0        |
+    | 3               | 240      | 0        | 100      |
+    | 3               | 0        | 300      | 10       |
+    """
+
+    amp_dist_df = pd.read_csv(amplicon_distribution_file, sep="\t")
+
+    amp_dist_df.columns = [
+        # process the lineage names the same as before
+        col.replace(" ", "_")
+        if col != "amplicon_number"
+        else col for col in amp_dist_df.columns
+    ]
+    lineages = [col for col in amp_dist_df.columns if col != "amplicon_number"]
+
+    amp_dist_df_long = amp_dist_df.melt(
+        id_vars="amplicon_number", var_name="ref",
+        value_vars=lineages, value_name="n_reads"
+    )
+
+    amplicon_df = amplicon_df.merge(
+        amp_dist_df_long,
+        on=["ref", "amplicon_number"],
+        how="left"
+    )
+
+    amplicon_df["total_n_reads"] = amp_dist_df[lineages].sum().sum()
+    return amplicon_df
+
+
 def get_amplicon_reads_sampler(amplicon_distribution, amplicon_distribution_file, amplicon_pseudocounts_c, genome_abundances, total_n_reads):
     
     if amplicon_distribution.upper() == "EXACT":
-
-        amplicon_distribution_dict = {}
-        with open(amplicon_distribution_file) as adf:
-            genome_names = adf.readline().split("\t")
-            amplicon_distribution_dict = {g: [] for g in genome_names}
 
         def hyperparam_sampler(dataframe_row):
             return -1
@@ -23,8 +59,7 @@ def get_amplicon_reads_sampler(amplicon_distribution, amplicon_distribution_file
             return -1
 
         def reads_sampler(dataframe_row):
-            nonlocal amplicon_distribution_dict
-            return amplicon_distribution_dict[dataframe_row.ref][dataframe_row.amplicon_number - 1]
+            return -1
 
 
     elif amplicon_distribution.upper() == "DIRICHLET_1":
